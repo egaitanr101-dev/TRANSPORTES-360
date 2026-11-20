@@ -1,0 +1,7 @@
+# Fines de línea normalizados en el repositorio; los scripts de PowerShell se conservan con CRLF (Windows).
+* text=auto
+*.ps1 text eol=crlf
+*.png binary
+*.jpg binary
+*.webp binary
+*.ico binary

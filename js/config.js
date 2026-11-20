@@ -1,0 +1,25 @@
+/* TRANSPORTES 360 — Configuración PÚBLICA del frontend.
+ *
+ * Para conectar a Supabase (iteración 1) se completan "url" y "anonKey" (Project Settings → API).
+ * Ambos valores son públicos por diseño: la seguridad la aplican RLS y las funciones del servidor.
+ * NUNCA colocar aquí la service_role, contraseñas, ni claves de OpenAI/Anthropic: esas viven
+ * solo en los Secrets de Supabase Edge Functions.
+ *
+ * Con url vacía la aplicación funciona en modo DEMO (datos ficticios en memoria, sin red).
+ * Agregar ?demo=1 a la dirección fuerza el modo DEMO aunque haya url.
+ */
+window.T360 = window.T360 || {};
+
+T360.config = {
+  nombreApp: 'TRANSPORTES 360',
+  lema: 'Aprende · Cuídate · Protégete · Crece',
+  version: '0.1.0 · Fase 3 · iteración 0',
+  zonaHoraria: 'America/Costa_Rica',
+  supabase: {
+    url: '',      // Proyecto TRANSPORTES-360 (se completa en la iteración 1, con autorización)
+    anonKey: ''   // Clave publicable (anon). Nunca la service_role
+  }
+};
+
+T360.config.modo = T360.config.supabase.url ? 'SUPABASE' : 'DEMO';
+if (/[?&]demo=1\b/.test(location.search)) T360.config.modo = 'DEMO';

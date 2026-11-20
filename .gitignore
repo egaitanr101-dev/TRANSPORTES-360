@@ -1,0 +1,30 @@
+# TRANSPORTES 360 — archivos que NUNCA deben subirse al repositorio
+
+# Secretos y configuración local (las claves de IA y la service_role viven solo en Supabase Secrets)
+.env
+.env.*
+*.local.*
+*.secret*
+secrets/
+supabase/.env
+supabase/.temp/
+supabase/.branches/
+
+# Datos reales, exportaciones y respaldos (pueden contener información personal)
+exportaciones/
+respaldos/
+*.dump
+*.backup
+*.csv
+*.xlsx
+
+# Entornos y herramientas locales
+node_modules/
+.claude/settings.local.json
+*.log
+
+# Archivos temporales de Windows / Office / OneDrive
+Thumbs.db
+desktop.ini
+~$*
+*.tmp

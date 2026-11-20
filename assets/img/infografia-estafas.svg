@@ -1,0 +1,45 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 360 400" role="img" aria-label="Infografía: 4 reglas para no caer en estafas. 1, no comparta códigos. 2, cuelgue y llame usted al número oficial. 3, confirme que el pago ingresó. 4, tómese un minuto antes de actuar.">
+  <rect width="360" height="400" rx="18" fill="#ffffff"/>
+  <rect width="360" height="74" rx="18" fill="#0b1d3a"/>
+  <rect y="56" width="360" height="18" fill="#0b1d3a"/>
+  <g font-family="Segoe UI, Arial, sans-serif">
+    <text x="20" y="32" font-size="12" font-weight="700" fill="#f0b020" letter-spacing="1.5">SEGURIDAD DIGITAL</text>
+    <text x="20" y="56" font-size="21" font-weight="800" fill="#ffffff">4 reglas para no caer</text>
+  </g>
+  <!-- Tarjeta 1: candado -->
+  <rect x="16" y="90" width="158" height="128" rx="14" fill="#f2f4f8"/>
+  <circle cx="40" cy="114" r="13" fill="#f0b020"/>
+  <rect x="112" y="118" width="34" height="26" rx="4" fill="#16305a"/>
+  <path d="M118 118 v-8 a11 11 0 0 1 22 0 v8" fill="none" stroke="#16305a" stroke-width="5"/>
+  <circle cx="129" cy="130" r="3.5" fill="#f0b020"/>
+  <!-- Tarjeta 2: teléfono -->
+  <rect x="186" y="90" width="158" height="128" rx="14" fill="#f2f4f8"/>
+  <circle cx="210" cy="114" r="13" fill="#f0b020"/>
+  <path d="M286 106 c-4 4 -4 10 2 18 s14 12 18 8 l4 -4 l-8 -8 l-4 3 c-3 -1 -7 -5 -8 -8 l3 -4 l-8 -8 z" fill="#16305a"/>
+  <!-- Tarjeta 3: billete con check -->
+  <rect x="16" y="230" width="158" height="128" rx="14" fill="#f2f4f8"/>
+  <circle cx="40" cy="254" r="13" fill="#f0b020"/>
+  <rect x="104" y="246" width="50" height="28" rx="4" fill="#16305a"/>
+  <circle cx="129" cy="260" r="7" fill="#f2f4f8"/>
+  <circle cx="152" cy="276" r="10" fill="#0f8a2e"/>
+  <path d="M147 276 l3.5 3.5 l6.5 -7" fill="none" stroke="#ffffff" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/>
+  <!-- Tarjeta 4: reloj -->
+  <rect x="186" y="230" width="158" height="128" rx="14" fill="#f2f4f8"/>
+  <circle cx="210" cy="254" r="13" fill="#f0b020"/>
+  <circle cx="300" cy="262" r="17" fill="none" stroke="#16305a" stroke-width="5"/>
+  <path d="M300 252 v10 l7 5" fill="none" stroke="#16305a" stroke-width="4" stroke-linecap="round"/>
+  <g font-family="Segoe UI, Arial, sans-serif" fill="#0b1d3a">
+    <g font-size="14" font-weight="800" text-anchor="middle">
+      <text x="40" y="119">1</text><text x="210" y="119">2</text><text x="40" y="259">3</text><text x="210" y="259">4</text>
+    </g>
+    <g font-size="14" font-weight="700">
+      <text x="28" y="172">No comparta</text><text x="28" y="190">códigos ni PIN</text>
+      <text x="198" y="172">Cuelgue y llame</text><text x="198" y="190">usted al oficial</text>
+      <text x="28" y="312">Confirme que el</text><text x="28" y="330">pago ingresó</text>
+      <text x="198" y="312">Tómese un minuto</text><text x="198" y="330">antes de actuar</text>
+    </g>
+  </g>
+  <g font-family="Segoe UI, Arial, sans-serif" font-size="10" font-weight="700" fill="#66728a" text-anchor="middle">
+    <text x="180" y="384" textLength="300" lengthAdjust="spacingAndGlyphs">TRANSPORTES 360 · Aprende · Cuídate · Protégete · Crece</text>
+  </g>
+</svg>
