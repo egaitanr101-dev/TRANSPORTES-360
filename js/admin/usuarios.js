@@ -27,6 +27,7 @@
     function mostrarCodigo(nombre, act) {
       T.poner(revelado, h('section', { class: 'card', style: 'margin-bottom:1rem;border:2px solid var(--gold)', role: 'status' },
         h('h2', null, 'Código de activación para ' + nombre),
+        T.config.modo === 'DEMO' ? h('div', { class: 'note warn' }, 'Modo demostración: este código es ficticio y NO sirve en la app real.') : null,
         h('div', { class: 'mono', style: 'font-size:2rem;font-weight:800;letter-spacing:.12em;margin:.4rem 0' }, act.codigo),
         h('p', { class: 'small' }, 'Entréguelo en persona. Vence el ' + fecha(act.vence) + ' y sirve una sola vez. ', h('strong', null, 'No se volverá a mostrar.')),
         h('p', { class: 'small muted', style: 'margin:0' }, 'No lo envíe por WhatsApp ni por correo. Si se pierde, genere uno nuevo: el anterior queda anulado.'),

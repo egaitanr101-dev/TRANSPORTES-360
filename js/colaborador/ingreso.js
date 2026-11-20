@@ -19,7 +19,7 @@
 
     const form = h('form', { class: 'stack', novalidate: true, onsubmit: enviar },
       campo('codigo', 'Código de empleado', 'text', 'Ej. TR-0417', 'username', activar ? null : 'Personal administrativo: puede ingresar con su correo.'),
-      activar ? campo('activacion', 'Código de activación', 'text', '8 caracteres', 'one-time-code', 'Se lo entrega su supervisor en persona. Vence en 72 horas y sirve una sola vez.') : null,
+      activar ? campo('activacion', 'Código de activación', 'text', '8 caracteres', 'one-time-code', 'Viene en la tarjeta que le entregaron en persona. Sirve una sola vez y vence en la fecha indicada en la tarjeta.') : null,
       campo('contrasena', activar ? 'Cree su contraseña' : 'Contraseña', 'password', activar ? 'Mínimo 8 caracteres' : '', activar ? 'new-password' : 'current-password', activar ? 'No use su código de empleado ni su fecha de nacimiento.' : null),
       activar ? campo('repetir', 'Repita la contraseña', 'password', '', 'new-password') : null,
       error, boton);

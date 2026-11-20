@@ -102,8 +102,10 @@
   // ---------- Hoja imprimible ----------
   function hojaCodigos(creados) {
     const url = T.config.urlPublica || location.origin;
+    const demo = T.config.modo === 'DEMO';
     return h('section', { class: 'hoja-codigos', 'aria-label': 'Tarjetas de activación para imprimir' },
-      creados.map(c => h('article', { class: 'tarjeta-codigo' },
+      creados.map(c => h('article', { class: 'tarjeta-codigo' + (demo ? ' demo' : '') },
+        demo ? h('div', { class: 'tc-demo' }, 'DEMOSTRACIÓN · CÓDIGO NO VÁLIDO') : null,
         h('div', { class: 'tc-marca' }, 'TRANSPORTES 360 · Aprende · Cuídate · Protégete · Crece'),
         h('div', { class: 'tc-nombre' }, c.nombre),
         h('div', { class: 'tc-dato' }, 'Número de empleado: ', h('strong', null, c.codigo)),
@@ -188,6 +190,7 @@
       const avisos = r.creados.filter(c => c.aviso);
       T.poner(zona,
         r.error ? h('p', { class: 'form-error' }, r.error) : null,
+        T.config.modo === 'DEMO' ? h('div', { class: 'note warn', style: 'margin-bottom:1rem' }, 'Modo demostración: estos colaboradores y códigos son ficticios, viven solo en esta página y NO sirven en la app real.') : null,
         h('section', { class: 'card', style: 'border:2px solid var(--gold)' },
           h('h2', null, r.creados.length + ' colaboradores creados con su código de activación'),
           h('p', null, h('strong', null, 'Imprima los códigos ahora: '), 'se muestran una sola vez. Si cierra esta pantalla sin imprimir, tendrá que generar códigos nuevos desde la lista de usuarios.'),
