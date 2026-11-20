@@ -19,6 +19,8 @@
         const codigo = error.hint && /^[A-Z_]+$/.test(error.hint) ? error.hint : null;
         if (codigo) return T.error(codigo, error.message);
         if (error.code === '42501' || error.status === 403) return T.error('NO_AUTORIZADO', error.message);
+        // Restricciones de la base (campo vacío, demasiado largo, formato): mensaje claro en vez del técnico
+        if (['23514', '23502', '22P02', '22001', '23505'].includes(error.code)) return T.error('VALIDACION', 'Revise los datos: hay un campo vacío, repetido o demasiado largo.');
         if (error.status === 401) return T.error('NO_AUTENTICADO', error.message);
         if (/fetch|network|Failed to/i.test(error.message || '')) return T.error('RED', error.message);
         return T.error('DESCONOCIDO', error.message);
@@ -44,7 +46,7 @@
         return codigo.toLowerCase() + '@' + T.config.dominioColaboradores; // colaborador: correo técnico, sin buzón
       }
       function usuarioDe(p) {
-        return { id: p.id, nombre: p.nombre, iniciales: p.iniciales || '?', codigo: p.codigo || '', area: p.area || 'Sin área', rol: p.rol, rolNombre: p.rol_nombre, permisos: p.permisos || [] };
+        return { id: p.id, nombre: p.nombre, iniciales: p.iniciales || '?', codigo: p.codigo || '', area: p.area || 'Sin área', rol: p.rol, rolNombre: p.rol_nombre, permisos: p.permisos || [], privacidadAceptada: !!p.privacidad_aceptada };
       }
       async function perfil() {
         try { return usuarioDe(await rpc('fn_mi_perfil')); }
@@ -76,16 +78,39 @@
         async salir() { await cliente.auth.signOut(); },
         async aceptarPrivacidad() { await rpc('fn_aceptar_privacidad'); },
 
-        // ---------- Colaborador (contenido: iteración 2 en adelante) ----------
+        // ---------- Colaborador ----------
         async inicio() {
           const usuario = await perfil();
-          const { data: cats, error } = await cliente.from('knowledge_categories').select('name, icon').eq('is_active', true).order('sort_order');
-          if (error) throw traducir(error);
-          return { usuario, semana: null, alertasPendientes: [], consejo: null, reconocimientos: [], categorias: (cats || []).map(c => ({ icono: c.icon, nombre: c.name })) };
+          const [semana, cats] = await Promise.all([
+            rpc('fn_semana_actual'),
+            cliente.from('knowledge_categories').select('name, icon').eq('is_active', true).order('sort_order')
+          ]);
+          if (cats.error) throw traducir(cats.error);
+          return { usuario, semana: semana || null, alertasPendientes: [], consejo: null, reconocimientos: [], categorias: (cats.data || []).map(c => ({ icono: c.icon, nombre: c.name })) };
         },
-        async semana() { await perfil(); return null; },
+        async semana() { return (await rpc('fn_semana_actual')) || null; },
+        async capsula(id) { return rpc('fn_capsula', { p_id: id }); },
+        async responderCapsula(id, respuestas, clave) { return rpc('fn_responder_capsula', { p_capsula: id, p_respuestas: respuestas, p_clave: clave }); },
         async alertas() { await perfil(); return []; },
-        async historial() { await perfil(); return { semanas: [], alertas: { confirmadas: 0, total: 0 } }; },
+        async historial() {
+          const r = await rpc('fn_mi_historial');
+          return { semanas: r.semanas || [], alertas: { confirmadas: 0, total: 0 } };
+        },
+
+        // ---------- Panel: capacitación semanal ----------
+        async categorias() {
+          const { data, error } = await cliente.from('knowledge_categories').select('id, name, is_active').order('sort_order');
+          if (error) throw traducir(error);
+          return (data || []).map(c => ({ id: c.id, nombre: c.name, activa: c.is_active }));
+        },
+        async semanasAdmin() { return rpc('fn_admin_semanas'); },
+        async semanaAdmin(id) { return rpc('fn_admin_semana', { p_id: id }); },
+        async guardarSemana(datos) { return rpc('fn_admin_semana_guardar', { p: datos }); },
+        async enviarSemana(id) { return rpc('fn_admin_semana_enviar', { p_id: id }); },
+        async devolverSemana(id, comentario) { return rpc('fn_admin_semana_devolver', { p_id: id, p_comentario: comentario }); },
+        async aprobarSemana(id, comentario) { return rpc('fn_admin_semana_aprobar', { p_id: id, p_comentario: comentario || null }); },
+        async archivarSemana(id, comentario) { return rpc('fn_admin_semana_archivar', { p_id: id, p_comentario: comentario || null }); },
+        async eliminarSemana(id) { return rpc('fn_admin_semana_eliminar', { p_id: id }); },
 
         // ---------- Panel ----------
         async adminSesion() {
@@ -125,7 +150,7 @@
         async guardarUsuario(id, cambios) { return rpc('fn_admin_usuario_guardar', { p_usuario: id, p: cambios }); }
       };
 
-      const PENDIENTES = ['capsula', 'responderCapsula', 'alerta', 'confirmarAlerta', 'resumen', 'generarBorrador', 'borrador', 'sorteoSemana', 'ejecutarSorteo'];
+      const PENDIENTES = ['alerta', 'confirmarAlerta', 'resumen', 'generarBorrador', 'borrador', 'sorteoSemana', 'ejecutarSorteo'];
       for (const m of PENDIENTES) api[m] = () => Promise.reject(T.error('NO_IMPLEMENTADO', 'Pendiente de su iteración: ' + m));
       return api;
     }

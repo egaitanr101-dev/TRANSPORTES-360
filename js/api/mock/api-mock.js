@@ -21,7 +21,8 @@
     idempotencia: {},      // clave → resultado
     vistas: new Set(),
     confirmadas: new Map(D.alertas.filter(a => a.confirmada).map(a => [a.id, 'antes'])),
-    sorteos: {}
+    sorteos: {},
+    semanas: []
   };
 
   // La sesión de la demo se recuerda solo en esta pestaña (sessionStorage), con try/catch por navegación privada.
@@ -167,6 +168,70 @@
     },
 
     async aceptarPrivacidad() { exigirSesion(); await espera(); },
+
+    // ---------- Panel: capacitación semanal (simula fn_admin_semana_*; reglas principales) ----------
+    async categorias() { await espera(); return D.categorias.map((c, i) => ({ id: 'cat-' + i, nombre: c.nombre, activa: true })); },
+    async semanasAdmin() {
+      await espera();
+      return copia(estado.semanas.map(s => ({ id: s.id, week_start: s.week_start, titulo: s.titulo, categoria: (D.categorias[Number(String(s.category_id).slice(4))] || {}).nombre, estado: s.estado, version: s.version, editor: D.admin.nombre, completas: s.capsulas.length, publica: s.publica || null })));
+    },
+    async semanaAdmin(id) {
+      await espera();
+      const s = estado.semanas.find(x => x.id === id);
+      if (!s) throw T.error('NO_ENCONTRADO', 'Semana no encontrada.');
+      return copia(Object.assign({ editor: D.admin.nombre, historial: s.historial, bloqueada: false }, s));
+    },
+    async guardarSemana(p) {
+      await espera(250);
+      if (new Date(p.week_start + 'T12:00:00').getDay() !== 1) throw T.error('VALIDACION', 'La semana debe empezar un lunes.');
+      if (!String(p.titulo || '').trim()) throw T.error('VALIDACION', 'Escriba el tema de la semana.');
+      if (estado.semanas.some(x => x.week_start === p.week_start && x.id !== p.id && x.estado !== 'ARCHIVADO')) throw T.error('VALIDACION', 'Ya existe una capacitación para esa semana.');
+      let s = p.id ? estado.semanas.find(x => x.id === p.id) : null;
+      if (p.id && !s) throw T.error('NO_ENCONTRADO', 'Semana no encontrada.');
+      if (!s) { s = { id: 'sem-' + Date.now(), estado: 'BORRADOR', version: 0, historial: [] }; estado.semanas.push(s); s.historial.push({ fecha: new Date().toISOString(), de: null, a: 'BORRADOR', actor: D.admin.nombre }); }
+      else if (!['BORRADOR', 'REQUIERE_CORRECCION', 'PENDIENTE_REVISION', 'PROGRAMADO'].includes(s.estado)) throw T.error('VALIDACION', 'Esta semana ya no se puede editar.');
+      if (s.estado === 'PROGRAMADO' || s.estado === 'PENDIENTE_REVISION') { s.estado = 'PENDIENTE_REVISION'; s.publica = null; }
+      Object.assign(s, copia({ week_start: p.week_start, category_id: p.category_id, titulo: p.titulo, objetivo: p.objetivo || '', capsulas: p.capsulas || [] }));
+      s.version += 1;
+      return s.id;
+    },
+    async enviarSemana(id) {
+      await espera();
+      const s = estado.semanas.find(x => x.id === id);
+      if (!['BORRADOR', 'REQUIERE_CORRECCION'].includes(s.estado)) throw T.error('VALIDACION', 'Solo un borrador o una semana devuelta se envía a revisión.');
+      if (s.capsulas.length !== 5) throw T.error('VALIDACION', 'La semana debe tener 5 cápsulas (lunes a viernes); tiene ' + s.capsulas.length + '.');
+      for (const c of s.capsulas) {
+        if (!c.bloques.length) throw T.error('VALIDACION', 'Una cápsula no tiene contenido.');
+        if (c.preguntas.length !== 2 || c.preguntas.some(q => q.opciones.length < 3 || q.correcta == null)) throw T.error('VALIDACION', 'Cada cápsula necesita 2 preguntas con 3 o 4 opciones y una respuesta correcta.');
+      }
+      s.historial.push({ fecha: new Date().toISOString(), de: s.estado, a: 'PENDIENTE_REVISION', actor: D.admin.nombre });
+      s.estado = 'PENDIENTE_REVISION';
+      return { estado: s.estado };
+    },
+    async devolverSemana(id, comentario) {
+      await espera();
+      if (String(comentario || '').trim().length < 5) throw T.error('VALIDACION', 'Explique qué se debe corregir.');
+      const s = estado.semanas.find(x => x.id === id);
+      s.historial.push({ fecha: new Date().toISOString(), de: s.estado, a: 'REQUIERE_CORRECCION', comentario, actor: D.admin.nombre });
+      s.estado = 'REQUIERE_CORRECCION';
+      return { estado: s.estado };
+    },
+    async aprobarSemana(id, comentario) {
+      await espera();
+      const s = estado.semanas.find(x => x.id === id);
+      if (s.estado !== 'PENDIENTE_REVISION') throw T.error('VALIDACION', 'Solo se aprueba una semana pendiente de revisión.');
+      // En la demostración el mismo usuario edita y aprueba: se marca como "aprobador único", igual que en el servidor
+      s.historial.push({ fecha: new Date().toISOString(), de: s.estado, a: 'PROGRAMADO', comentario, actor: D.admin.nombre });
+      s.estado = 'PROGRAMADO'; s.publica = s.week_start + 'T00:00:00-06:00';
+      return { estado: s.estado, publica: s.publica, aprobador_unico: true };
+    },
+    async archivarSemana(id) { await espera(); const s = estado.semanas.find(x => x.id === id); s.historial.push({ fecha: new Date().toISOString(), de: s.estado, a: 'ARCHIVADO', actor: D.admin.nombre }); s.estado = 'ARCHIVADO'; return { estado: s.estado }; },
+    async eliminarSemana(id) {
+      await espera();
+      const s = estado.semanas.find(x => x.id === id);
+      if (!['BORRADOR', 'REQUIERE_CORRECCION'].includes(s.estado)) throw T.error('VALIDACION', 'Solo se elimina un borrador que nunca fue aprobado; archive las demás.');
+      estado.semanas = estado.semanas.filter(x => x.id !== id);
+    },
 
     // ---------- Panel (en DEMO no pide ingreso; en Supabase exige sesión y permisos) ----------
     async adminSesion() { await espera(20); return copia(D.admin); },

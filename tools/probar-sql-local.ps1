@@ -15,9 +15,12 @@ if ($LASTEXITCODE -ne 0) { exit 1 }
 
 $scripts = @('sql\local\00_simulacion_supabase.sql', 'sql\01_base.sql', 'sql\02_identidad.sql', 'sql\03_catalogos.sql',
              'sql\04_seguridad.sql')
-# Migraciones fechadas, en orden de nombre
+# Migraciones fechadas, en orden de nombre (ajustes a 01-04)
 $scripts += Get-ChildItem (Join-Path $raiz 'sql\migraciones') -Filter '*.sql' | Sort-Object Name | ForEach-Object { 'sql\migraciones\' + $_.Name }
-$scripts += @('sql\97_pruebas_importacion.sql', 'sql\98_pruebas_funcionales.sql', 'sql\99_pruebas_seguridad.sql')
+# Módulos de las iteraciones siguientes (05, 06, ...)
+$todos = Get-ChildItem (Join-Path $raiz 'sql') -File | Sort-Object Name
+$scripts += $todos | Where-Object { $_.Name -match '^0[5-9]_.*\.sql$' } | ForEach-Object { 'sql\' + $_.Name }
+$scripts += $todos | Where-Object { $_.Name -match '^9\d_pruebas_.*\.sql$' } | ForEach-Object { 'sql\' + $_.Name }
 foreach ($s in $scripts) {
   Write-Host "== $s"
   & $psql -h localhost -p $Puerto -U postgres -d t360_pruebas -v ON_ERROR_STOP=1 -q -X -f (Join-Path $raiz $s)

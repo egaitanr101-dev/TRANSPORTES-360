@@ -9,7 +9,8 @@
     T.col.usuario = d.usuario;
     T.col.pendientes = d.alertasPendientes.length;
     const s = d.semana;
-    const hoy = s ? s.capsulas.find(c => c.estado === 'hoy') : null;
+    // La de hoy; si ya la hizo, la más antigua que quedó pendiente (puede ponerse al día hasta el domingo)
+    const hoy = s ? (s.capsulas.find(c => c.estado === 'hoy') || s.capsulas.find(c => c.estado === 'pendiente')) : null;
     const pend = d.alertasPendientes;
 
     T.col.pagina('inicio',
@@ -23,10 +24,10 @@
         T.flotilla(),
         h('div', { class: 'kicker' }, 'Semana ' + s.numero + ' · ' + s.categoria),
         h('h1', { id: 'tit-semana' }, s.tema),
-        h('div', { class: 'dots', role: 'img', 'aria-label': s.completadas + ' de 5 cápsulas completadas' },
+        h('div', { class: 'dots', role: 'img', 'aria-label': s.capsulas.filter(c => c.estado === 'completada').length + ' de 5 cápsulas completadas' },
           s.capsulas.map(c => h('span', { class: 'dot ' + (c.estado === 'completada' ? 'done' : c.estado === 'hoy' ? 'today' : '') }))),
         hoy
-          ? [h('p', { class: 'small', style: 'opacity:.85;position:relative' }, 'Cápsula de hoy · ' + hoy.nombre),
+          ? [h('p', { class: 'small', style: 'opacity:.85;position:relative' }, (hoy.estado === 'hoy' ? 'Cápsula de hoy · ' : 'Pendiente · ') + hoy.nombre),
             h('a', { class: 'btn primary', href: '#capsula/' + encodeURIComponent(hoy.id) }, hoy.titulo, icon('chevron', 'sm'))]
           : h('p', { style: 'position:relative;margin:0' }, '✔ Completó la cápsula de hoy. ¡Nos vemos mañana!')),
       pend.length ? h('a', { class: 'alert-strip' + (pend[0].prioridad === 'CRITICA' ? ' crit' : ''), href: '#alerta/' + encodeURIComponent(pend[0].id) },

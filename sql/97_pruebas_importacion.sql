@@ -41,6 +41,18 @@ begin
   perform pg_temp.ok(app.area_id_de('Distribución Rutas Rurales') = 'DISTRIBUCION_RUTAS_R' and app.area_id_de('  Almacén / Frío ') = 'ALMACEN_FRIO'
                      and app.area_id_de('X') = 'AREA_X', 'I1 identificador de área estable desde el nombre');
 
+  -- I0 · Alta como la hace Supabase Auth: primero el usuario sin metadatos, luego se agregan rol, código y nombre
+  insert into auth.users (id, email, raw_app_meta_data) values ('00000000-0000-0000-0000-0000000000f1', 'z-9@colaboradores.t360.invalid', '{"provider":"email"}');
+  perform pg_temp.ok((select role_id is null from public.profiles where id = '00000000-0000-0000-0000-0000000000f1'), 'I0 al insertarse aún no hay rol');
+  update auth.users set raw_app_meta_data = '{"provider":"email","role":"COLABORADOR","employee_code":"z-9","full_name":"Zeta Nueve"}'
+   where id = '00000000-0000-0000-0000-0000000000f1';
+  perform pg_temp.ok((select role_id = 'COLABORADOR' and employee_code = 'Z-9' and full_name = 'Zeta Nueve' and email is null and not is_active
+                        from public.profiles where id = '00000000-0000-0000-0000-0000000000f1'), 'I0 al llegar los metadatos el perfil se completa');
+  update auth.users set raw_app_meta_data = '{"provider":"email","role":"ADMIN"}' where id = '00000000-0000-0000-0000-0000000000a2';
+  perform pg_temp.ok((select role_id = 'ADMIN' and is_active from public.profiles where id = a2), 'I0 nunca cambia el rol de un perfil ya configurado');
+  update auth.users set raw_app_meta_data = '{"provider":"email","role":"ADMIN_PRINCIPAL"}' where id = '00000000-0000-0000-0000-0000000000e3';
+  perform pg_temp.ok((select role_id = 'COLABORADOR' from public.profiles where id = '00000000-0000-0000-0000-0000000000e3'), 'I0 ni el de un colaborador ya creado');
+
   perform pg_temp.como(a2);
   r := public.fn_importar_completar('[
     {"id":"00000000-0000-0000-0000-0000000000e1","area":"distribución gam","supervisor":"SUPER@t360.test"},

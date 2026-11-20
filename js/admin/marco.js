@@ -6,11 +6,11 @@
 
   const MENU = [
     ['Operación', [['resumen', 'chart', 'Resumen'], ['calendario', 'calendar', 'Calendario editorial']]],
-    ['Contenido', [['generador', 'spark', 'Generador IA'], ['revision', 'audit', 'Revisión y aprobación'], ['alertas', 'alert', 'ALERTAS 360'], ['documentos', 'doc', 'Biblioteca y fuentes']]],
+    ['Contenido', [['capacitacion', 'week', 'Capacitación semanal'], ['revision', 'audit', 'Revisión y aprobación'], ['generador', 'spark', 'Generador IA'], ['alertas', 'alert', 'ALERTAS 360'], ['documentos', 'doc', 'Biblioteca y fuentes']]],
     ['Semana', [['sorteo', 'gift', 'Cierre y sorteo']]],
     ['Administración', [['usuarios', 'users', 'Usuarios'], ['config', 'gear', 'Proveedores IA y parámetros'], ['auditoria', 'history', 'Auditoría']]]
   ];
-  const DISPONIBLES = new Set(['resumen', 'generador', 'revision', 'sorteo', 'usuarios']);
+  const DISPONIBLES = new Set(['resumen', 'capacitacion', 'generador', 'revision', 'sorteo', 'usuarios']);
 
   T.adm = {
     usuario: null,

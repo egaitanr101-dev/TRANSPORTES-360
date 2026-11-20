@@ -4,7 +4,7 @@
 
 | | |
 |---|---|
-| Estado | Fase 3 · iteración 1 aplicada en Supabase: identidad, activación de cuentas e ingreso ([docs/ITERACION_1.md](docs/ITERACION_1.md)). El contenido (capacitación, alertas, sorteo) llega en las iteraciones siguientes |
+| Estado | Fase 3: iteraciones 1 (identidad, activación, importación masiva) y 2 (capacitación semanal) aplicadas en Supabase ([docs/ITERACION_1.md](docs/ITERACION_1.md), [docs/ITERACION_2.md](docs/ITERACION_2.md)). Siguen: cierre y sorteo, alertas y consejos, IA, biblioteca, campañas, reportes |
 | Tecnología | HTML + CSS + JavaScript sin compilación, sin npm. Backend: Supabase (Auth, PostgreSQL con RLS, Storage, Edge Functions) |
 | Proyecto Supabase | `TRANSPORTES-360` (conectado). Modo demostración con datos ficticios: agregar `?demo=1` a la dirección |
 

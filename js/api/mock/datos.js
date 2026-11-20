@@ -7,10 +7,22 @@
   const FUENTE_DEMO = 'Fuente: en el modo demostración no se muestran fuentes reales. En la app aparecerá la entidad y el enlace validado por un administrador.';
 
   T.mockDatos = {
-    usuario: { id: 'u-demo-0417', nombre: 'María Fernández', iniciales: 'MF', codigo: 'TR-0417', area: 'Distribución GAM', rol: 'COLABORADOR' },
+    usuario: { id: 'u-demo-0417', nombre: 'María Fernández', iniciales: 'MF', codigo: 'TR-0417', area: 'Distribución GAM', rol: 'COLABORADOR', privacidadAceptada: true },
     admin: {
       id: 'u-demo-admin', nombre: 'Ana Solís', rol: 'Administrador',
       permisos: ['contenido.crear_editar', 'contenido.aprobar', 'ia.generar', 'reportes.ver', 'sorteo.ejecutar', 'semana.cerrar', 'usuarios.gestionar']
+    },
+    // Ejemplo de cápsula para precargar el editor ("Usar ejemplo"): la cápsula interactiva de la demostración
+    get ejemploCapsula() {
+      const c = this.capsulas['cap-47-4'];
+      return {
+        titulo: c.titulo, objetivo: 'Reconocer los errores más comunes que permiten que una estafa funcione.', minutos: c.minutos,
+        bloques: c.bloques.filter(b => b.tipo !== 'evaluacion'),
+        preguntas: [
+          { texto: c.preguntas[0].texto, opciones: c.preguntas[0].opciones.map(o => o.texto), correcta: 1, explicacion: this.servidor.claves['q-47-4-1'].explicacion, retro: this.servidor.claves['q-47-4-1'].incorrecta },
+          { texto: c.preguntas[1].texto, opciones: c.preguntas[1].opciones.map(o => o.texto), correcta: 1, explicacion: this.servidor.claves['q-47-4-2'].explicacion, retro: this.servidor.claves['q-47-4-2'].incorrecta }
+        ]
+      };
     },
 
     areas: [{ id: 'DIS_GAM', nombre: 'Distribución GAM' }, { id: 'RUTAS', nombre: 'Rutas rurales' }, { id: 'CEDI', nombre: 'Centro de distribución' }],

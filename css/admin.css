@@ -35,6 +35,11 @@ table.t th { font-size: .75rem; text-transform: uppercase; letter-spacing: .05em
 .doclist label { display: inline-flex; align-items: center; gap: .4rem; padding: .35rem .7rem; border: 1px solid var(--border); border-radius: 999px; font-size: .85rem; cursor: pointer; background: var(--surface); }
 .admin-mobile-top { display: none; }
 
+/* Vista previa de cápsula en marco de teléfono */
+.modal-fondo { position: fixed; inset: 0; z-index: 40; background: rgba(5, 12, 24, .7); display: flex; align-items: flex-start; justify-content: center; padding: 16px; overflow-y: auto; }
+.telefono { width: 100%; max-width: 400px; background: var(--bg); border: 10px solid #0b1d3a; border-radius: 28px; padding: 12px; max-height: 82vh; overflow-y: auto; }
+.telefono .story-top { top: 0; }
+
 /* Tarjetas de activación (pantalla e impresión) */
 .hoja-codigos { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 12px; }
 .tarjeta-codigo { border: 2px dashed #8c96a8; border-radius: 10px; padding: 12px 14px; background: #fff; color: #0f1b2e; break-inside: avoid; page-break-inside: avoid; }
