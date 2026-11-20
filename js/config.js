@@ -18,7 +18,10 @@ T360.config = {
   supabase: {
     url: '',      // Proyecto TRANSPORTES-360 (se completa en la iteración 1, con autorización)
     anonKey: ''   // Clave publicable (anon). Nunca la service_role
-  }
+  },
+  // Correo técnico de los colaboradores en Supabase Auth: <código>@<dominio>. No tiene buzón ni recibe correos.
+  // DEBE coincidir con la variable COLABORADORES_DOMINIO de la Edge Function admin-usuarios.
+  dominioColaboradores: 'colaboradores.t360.invalid'
 };
 
 T360.config.modo = T360.config.supabase.url ? 'SUPABASE' : 'DEMO';

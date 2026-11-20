@@ -6,6 +6,10 @@
   T.enrutador.registrar('semana', async () => {
     T.col.cargando('semana');
     const s = await T.api.semana();
+    if (!s) {
+      T.col.pagina('semana', h('h1', null, 'Semana'), h('p', { class: 'muted' }, 'Aún no hay una capacitación publicada esta semana.'));
+      return;
+    }
     T.col.pagina('semana',
       h('h1', null, 'Semana ' + s.numero),
       h('p', { class: 'muted' }, s.tema + ' · ' + s.rango),

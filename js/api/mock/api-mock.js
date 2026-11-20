@@ -166,8 +166,69 @@
       });
     },
 
-    // ---------- Panel (en DEMO no pide ingreso; en Supabase exigirá sesión y permisos) ----------
+    async aceptarPrivacidad() { exigirSesion(); await espera(); },
+
+    // ---------- Panel (en DEMO no pide ingreso; en Supabase exige sesión y permisos) ----------
     async adminSesion() { await espera(20); return copia(D.admin); },
+    async adminIngresar() { await espera(); return copia(D.admin); },
+
+    async usuarios() {
+      await espera();
+      return copia(D.usuarios.map(u => Object.assign({}, u, {
+        activacion: u.activacion === 'PENDIENTE' && new Date(u.activacion_vence) <= new Date() ? 'VENCIDA' : u.activacion
+      })));
+    },
+    async areas() { await espera(); return copia(D.areas); },
+
+    async crearColaborador(d) {
+      await espera(300);
+      const codigo = String(d.codigo || '').trim().toUpperCase();
+      if (!RE_CODIGO.test(codigo)) throw T.error('VALIDACION', 'Código de empleado no válido (letras, números y guiones).');
+      if (String(d.nombre || '').trim().length < 3) throw T.error('VALIDACION', 'El nombre debe tener al menos 3 caracteres.');
+      if (D.usuarios.some(u => u.codigo === codigo)) throw T.error('VALIDACION', 'Ya existe un usuario con ese código de empleado.');
+      const area = D.areas.find(a => a.id === d.area);
+      const sup = D.usuarios.find(u => u.id === d.supervisor);
+      const nuevo = { id: 'u-demo-' + codigo.toLowerCase(), nombre: String(d.nombre).trim(), codigo, correo: null, rol: 'COLABORADOR', area: area ? area.nombre : null, supervisor: sup ? sup.nombre : null, activo: false, activacion: 'SIN_CODIGO', activacion_vence: null };
+      D.usuarios.push(nuevo);
+      const act = await T.apiMock.emitirActivacion(nuevo.id);
+      return { id: nuevo.id, codigo: act.codigo, vence: act.vence };
+    },
+
+    async invitarPersonal(d) {
+      await espera(300);
+      if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(String(d.correo || ''))) throw T.error('VALIDACION', 'Correo no válido.');
+      if (String(d.nombre || '').trim().length < 3) throw T.error('VALIDACION', 'El nombre debe tener al menos 3 caracteres.');
+      if (d.rol !== 'SUPERVISOR' && !D.admin.permisos.includes('usuarios.gestionar_staff')) throw T.error('NO_AUTORIZADO', 'Solo el administrador principal invita administradores.');
+      const area = D.areas.find(a => a.id === d.area);
+      D.usuarios.push({ id: 'u-demo-' + Date.now(), nombre: d.nombre.trim(), codigo: null, correo: d.correo.toLowerCase(), rol: d.rol, area: area ? area.nombre : null, supervisor: null, activo: true, activacion: 'SIN_CODIGO', activacion_vence: null });
+      return { correo: d.correo };
+    },
+
+    /** Simula fn_emitir_activacion: alfabeto sin ambiguos, bytes criptográficos con rechazo, vence en 72 h. */
+    async emitirActivacion(id) {
+      await espera();
+      const u = D.usuarios.find(x => x.id === id);
+      if (!u) throw T.error('NO_ENCONTRADO', 'Usuario no encontrado.');
+      if (u.rol !== 'COLABORADOR') throw T.error('VALIDACION', 'Los códigos de activación son solo para colaboradores; el personal administrativo usa su correo.');
+      const alfabeto = 'ABCDEFGHJKMNPQRSTUVWXYZ23456789';
+      let r = '';
+      const b = new Uint8Array(1);
+      while (r.length < 8) { crypto.getRandomValues(b); if (b[0] < 248) r += alfabeto[b[0] % 31]; }
+      const codigo = r.slice(0, 4) + '-' + r.slice(4);
+      const vence = new Date(Date.now() + 72 * 3600 * 1000).toISOString();
+      u.activacion = 'PENDIENTE'; u.activacion_vence = vence;
+      return { codigo, vence };
+    },
+
+    async guardarUsuario(id, cambios) {
+      await espera();
+      const u = D.usuarios.find(x => x.id === id);
+      if (!u) throw T.error('NO_ENCONTRADO', 'Usuario no encontrado.');
+      if (id === D.admin.id && cambios.is_active === false) throw T.error('VALIDACION', 'No puede desactivar su propia cuenta.');
+      if (cambios.is_active === true && u.rol === 'COLABORADOR' && u.activacion !== 'ACTIVADA') throw T.error('VALIDACION', 'El colaborador debe activar su cuenta con su código de activación.');
+      if ('is_active' in cambios) u.activo = !!cambios.is_active;
+      return { id, activo: u.activo };
+    },
     async resumen() { await espera(); return copia(D.resumen); },
     async borrador() { await espera(); return copia(D.borrador); },
 

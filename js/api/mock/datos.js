@@ -8,7 +8,21 @@
 
   T.mockDatos = {
     usuario: { id: 'u-demo-0417', nombre: 'María Fernández', iniciales: 'MF', codigo: 'TR-0417', area: 'Distribución GAM', rol: 'COLABORADOR' },
-    admin: { id: 'u-demo-admin', nombre: 'Ana Solís', rol: 'ADMIN' },
+    admin: {
+      id: 'u-demo-admin', nombre: 'Ana Solís', rol: 'Administrador',
+      permisos: ['contenido.crear_editar', 'contenido.aprobar', 'ia.generar', 'reportes.ver', 'sorteo.ejecutar', 'semana.cerrar', 'usuarios.gestionar']
+    },
+
+    areas: [{ id: 'DIS_GAM', nombre: 'Distribución GAM' }, { id: 'RUTAS', nombre: 'Rutas rurales' }, { id: 'CEDI', nombre: 'Centro de distribución' }],
+
+    usuarios: [
+      { id: 'u-demo-principal', nombre: 'Paula Principal', codigo: null, correo: 'principal@ejemplo.test', rol: 'ADMIN_PRINCIPAL', area: null, supervisor: null, activo: true, activacion: 'SIN_CODIGO', activacion_vence: null },
+      { id: 'u-demo-admin', nombre: 'Ana Solís', codigo: null, correo: 'ana.solis@ejemplo.test', rol: 'ADMIN', area: null, supervisor: null, activo: true, activacion: 'SIN_CODIGO', activacion_vence: null },
+      { id: 'u-demo-super', nombre: 'Sergio Rojas', codigo: null, correo: 'sergio.rojas@ejemplo.test', rol: 'SUPERVISOR', area: 'Distribución GAM', supervisor: null, activo: true, activacion: 'SIN_CODIGO', activacion_vence: null },
+      { id: 'u-demo-0417', nombre: 'María Fernández', codigo: 'TR-0417', correo: null, rol: 'COLABORADOR', area: 'Distribución GAM', supervisor: 'Sergio Rojas', activo: true, activacion: 'ACTIVADA', activacion_vence: null },
+      { id: 'u-demo-0500', nombre: 'Carlos Mora', codigo: 'TR-0500', correo: null, rol: 'COLABORADOR', area: 'Distribución GAM', supervisor: 'Sergio Rojas', activo: false, activacion: 'PENDIENTE', activacion_vence: '2026-11-22T18:00:00-06:00' },
+      { id: 'u-demo-0612', nombre: 'Luis Vega', codigo: 'TR-0612', correo: null, rol: 'COLABORADOR', area: 'Rutas rurales', supervisor: null, activo: false, activacion: 'SIN_CODIGO', activacion_vence: null }
+    ],
 
     semana: {
       id: 'sem-47', numero: 47, rango: '17 al 23 de noviembre', categoria: 'Seguridad digital',

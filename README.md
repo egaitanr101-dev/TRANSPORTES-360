@@ -4,7 +4,7 @@
 
 | | |
 |---|---|
-| Estado | Fase 3 · iteración 0: estructura del proyecto y pantallas en **modo DEMO** (datos ficticios, sin Supabase) |
+| Estado | Fase 3 · iteración 1: identidad e ingreso listos y probados en local; pendientes de aplicar en Supabase ([docs/ITERACION_1.md](docs/ITERACION_1.md)). La app funciona en **modo DEMO** |
 | Tecnología | HTML + CSS + JavaScript sin compilación, sin npm. Backend: Supabase (Auth, PostgreSQL con RLS, Storage, Edge Functions) |
 | Proyecto Supabase | `TRANSPORTES-360` (aún no conectado; se conecta en la iteración 1 con autorización) |
 
@@ -20,6 +20,14 @@ powershell -NoProfile -ExecutionPolicy Bypass -File tools\servidor-local.ps1
 
 El servidor solo escucha en `localhost`, no instala nada y no sirve las carpetas `docs/`, `sql/`, `supabase/` ni `tools/`.
 
+## Probar la base de datos en local
+
+```powershell
+powershell -NoProfile -ExecutionPolicy Bypass -File tools\probar-sql-local.ps1 -PgBin "<carpeta bin de PostgreSQL 17>"
+```
+
+Aplica `sql/01`–`04` sobre una simulación de Supabase y ejecuta las pruebas funcionales y de seguridad.
+
 ## Estructura
 
 ```
@@ -31,8 +39,10 @@ js/api/                      api.js elige DEMO o SUPABASE · mock/ (solo DEMO) �
 js/colaborador/ · js/admin/  Pantallas
 js/vendor/                   supabase-js 2.45.4 (versión fija, local)
 assets/img/                  Ilustraciones propias (SVG)
-docs/                        Auditoría, plan, mapa funcional, modelo de datos, riesgos, diseño
-tools/                       Servidor local
+docs/                        Auditoría, plan, mapa funcional, modelo de datos, riesgos, diseño, iteraciones
+sql/                         Migraciones numeradas, pruebas (98, 99), reversión y arranque; local/ solo para pruebas
+supabase/functions/          Edge Functions (activar-cuenta, admin-usuarios)
+tools/                       Servidor local y pruebas SQL locales
 prototipo/                   Referencia de diseño de la Fase 2
 ```
 

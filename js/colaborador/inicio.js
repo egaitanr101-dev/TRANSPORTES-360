@@ -9,11 +9,16 @@
     T.col.usuario = d.usuario;
     T.col.pendientes = d.alertasPendientes.length;
     const s = d.semana;
-    const hoy = s.capsulas.find(c => c.estado === 'hoy');
+    const hoy = s ? s.capsulas.find(c => c.estado === 'hoy') : null;
     const pend = d.alertasPendientes;
 
     T.col.pagina('inicio',
       h('p', { class: 'muted small', style: 'margin:0' }, 'Hola, ' + d.usuario.nombre.split(' ')[0]),
+      !s ? h('section', { class: 'hero', 'aria-labelledby': 'tit-semana' },
+        T.flotilla(),
+        h('div', { class: 'kicker' }, T.config.lema),
+        h('h1', { id: 'tit-semana' }, 'Bienvenido a TRANSPORTES 360'),
+        h('p', { style: 'position:relative;margin:0' }, 'Aún no hay una capacitación publicada esta semana. Cuando esté lista, aparecerá aquí.')) :
       h('section', { class: 'hero', 'aria-labelledby': 'tit-semana' },
         T.flotilla(),
         h('div', { class: 'kicker' }, 'Semana ' + s.numero + ' · ' + s.categoria),
@@ -26,16 +31,17 @@
           : h('p', { style: 'position:relative;margin:0' }, '✔ Completó la cápsula de hoy. ¡Nos vemos mañana!')),
       pend.length ? h('a', { class: 'alert-strip' + (pend[0].prioridad === 'CRITICA' ? ' crit' : ''), href: '#alerta/' + encodeURIComponent(pend[0].id) },
         icon('alert'), h('span', { style: 'flex:1' }, (pend.length === 1 ? '1 alerta por confirmar: ' : pend.length + ' alertas por confirmar: ') + pend[0].titulo), icon('chevron', 'sm')) : null,
-      h('section', { class: 'card tip', 'aria-labelledby': 'tit-tip' },
+      d.consejo ? h('section', { class: 'card tip', 'aria-labelledby': 'tit-tip' },
         h('div', { class: 'label' }, 'Consejo breve · 30 s'),
         h('h2', { id: 'tit-tip' }, d.consejo.titulo),
         h('p', null, d.consejo.texto),
-        h('a', { class: 'btn wa', href: 'https://wa.me/?text=' + encodeURIComponent(d.consejo.compartir), target: '_blank', rel: 'noopener noreferrer' }, icon('share', 'sm'), 'Compartir por WhatsApp')),
+        h('a', { class: 'btn wa', href: 'https://wa.me/?text=' + encodeURIComponent(d.consejo.compartir), target: '_blank', rel: 'noopener noreferrer' }, icon('share', 'sm'), 'Compartir por WhatsApp')) : null,
       h('div', { class: 'section-title' }, h('h2', null, 'Aprenda sobre')),
       h('div', { class: 'cats' }, d.categorias.map(c => h('div', { class: 'cat' }, icon(c.icono), c.nombre))),
-      h('div', { class: 'section-title' }, h('h2', null, 'Reconocimientos')),
-      h('div', { class: 'badges' }, d.reconocimientos.map(r => h('div', { class: 'card badge' },
-        h('div', { class: 'medal' }, icon(r.icono)), h('div', { class: 'small' }, h('strong', null, r.titulo), h('br'), r.detalle)))),
-      h('p', { class: 'small muted' }, 'El ganador aparece solo si autorizó que se publique su nombre.'));
+      d.reconocimientos.length ? [
+        h('div', { class: 'section-title' }, h('h2', null, 'Reconocimientos')),
+        h('div', { class: 'badges' }, d.reconocimientos.map(r => h('div', { class: 'card badge' },
+          h('div', { class: 'medal' }, icon(r.icono)), h('div', { class: 'small' }, h('strong', null, r.titulo), h('br'), r.detalle)))),
+        h('p', { class: 'small muted' }, 'El ganador aparece solo si autorizó que se publique su nombre.')] : null);
   });
 })(window.T360);

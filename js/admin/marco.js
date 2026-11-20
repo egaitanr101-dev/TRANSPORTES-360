@@ -10,7 +10,7 @@
     ['Semana', [['sorteo', 'gift', 'Cierre y sorteo']]],
     ['Administración', [['usuarios', 'users', 'Usuarios'], ['config', 'gear', 'Proveedores IA y parámetros'], ['auditoria', 'history', 'Auditoría']]]
   ];
-  const DISPONIBLES = new Set(['resumen', 'generador', 'revision', 'sorteo']);
+  const DISPONIBLES = new Set(['resumen', 'generador', 'revision', 'sorteo', 'usuarios']);
 
   T.adm = {
     usuario: null,

@@ -9,6 +9,7 @@
     T.col.pagina('historial',
       h('h1', null, 'Mi historial'),
       h('div', { class: 'note' }, icon('lock', 'sm'), ' Sus puntajes solo los ve usted y el equipo de administración.'),
+      d.semanas.length ? null : h('p', { class: 'muted' }, 'Todavía no hay semanas registradas.'),
       h('ul', { class: 'list' }, d.semanas.map(s => h('li', null,
         h('div', { class: 'item' },
           h('span', { class: 'day' }, s.semana),
