@@ -1,35 +1,45 @@
 // =============================================================================
 // Edge Function "activar-cuenta" — El colaborador canjea su código de activación y crea su contraseña (D-02).
 //
-// Es PÚBLICA (el colaborador aún no tiene sesión): desplegar con  --no-verify-jwt
-//   supabase functions deploy activar-cuenta --no-verify-jwt
+// Es PÚBLICA (el colaborador aún no tiene sesión): se despliega SIN verificación de JWT.
 // Seguridad:
 //   - La verificación del código ocurre en la base (fn_srv_verificar_activacion): hash bcrypt, 72 h, máx. 5 intentos.
 //   - Ante cualquier fallo responde el MISMO mensaje: no revela si el código de empleado existe.
 //   - La contraseña se fija con la service_role (solo en el servidor) y nunca se registra.
 //   - Orden: verificar → fijar contraseña → confirmar (si algo falla antes de confirmar, el código sigue vigente).
-// Variables: SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY (automáticas) y APP_ORIGIN (p. ej. https://transportes360.ejemplo.cr)
+//   - Solo acepta peticiones de los orígenes permitidos (APP_ORIGINS).
+// Variables: SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY (automáticas) y APP_ORIGINS: orígenes permitidos separados
+//            por coma (p. ej. "https://transportes360.ejemplo.cr"). Sin la variable, solo el entorno local de desarrollo.
 // =============================================================================
 import { createClient } from 'npm:@supabase/supabase-js@2.45.4';
 
-const ORIGEN = Deno.env.get('APP_ORIGIN') ?? '';
-const CORS = {
-  'Access-Control-Allow-Origin': ORIGEN,
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
-  'Access-Control-Allow-Methods': 'POST, OPTIONS',
-  'Vary': 'Origin',
-};
+const ORIGENES = (Deno.env.get('APP_ORIGINS') ?? 'http://localhost:5610').split(',').map((o) => o.trim()).filter(Boolean);
 const GENERICO = 'El código de activación no es válido o ya venció. Pida uno nuevo a su supervisor.';
 const RE_CODIGO = /^[A-Z0-9][A-Z0-9-]{1,19}$/;
 
-function respuesta(cuerpo: unknown, estado = 200): Response {
-  return new Response(JSON.stringify(cuerpo), { status: estado, headers: { ...CORS, 'Content-Type': 'application/json' } });
+/** Cabeceras CORS calculadas por petición (nunca compartidas entre peticiones simultáneas). */
+function corsDe(req: Request): { permitido: boolean; cabeceras: Record<string, string> } {
+  const origen = req.headers.get('Origin') ?? '';
+  const permitido = ORIGENES.includes(origen);
+  return {
+    permitido,
+    cabeceras: {
+      'Access-Control-Allow-Origin': permitido ? origen : ORIGENES[0],
+      'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+      'Access-Control-Allow-Methods': 'POST, OPTIONS',
+      'Vary': 'Origin',
+    },
+  };
 }
 
 Deno.serve(async (req: Request) => {
-  if (req.method === 'OPTIONS') return new Response('ok', { headers: CORS });
+  const { permitido, cabeceras } = corsDe(req);
+  const respuesta = (cuerpo: unknown, estado = 200) =>
+    new Response(JSON.stringify(cuerpo), { status: estado, headers: { ...cabeceras, 'Content-Type': 'application/json' } });
+
+  if (req.method === 'OPTIONS') return new Response('ok', { headers: cabeceras });
   if (req.method !== 'POST') return respuesta({ error: 'Método no permitido' }, 405);
-  if (ORIGEN && req.headers.get('Origin') !== ORIGEN) return respuesta({ error: 'Origen no permitido' }, 403);
+  if (!permitido) return respuesta({ error: 'Origen no permitido' }, 403);
 
   const cuerpo = await req.json().catch(() => null);
   const codigo = String(cuerpo?.codigo_empleado ?? '').trim().toUpperCase();

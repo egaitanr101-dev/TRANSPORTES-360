@@ -5,6 +5,7 @@
   const rutas = {};
   let porDefecto = 'inicio';
   let guardia = null;
+  let alError = null;   // manejador opcional por aplicación (p. ej. el panel muestra "próximamente")
 
   async function resolver() {
     const destino = (location.hash || '').slice(1) || porDefecto;
@@ -16,6 +17,7 @@
       }
       await (rutas[base] || rutas[porDefecto])(...params.map(decodeURIComponent));
     } catch (e) {
+      if (alError && alError(e, base)) return;
       if (e && e.codigo === 'NO_AUTENTICADO') { location.replace('#ingreso'); return; }
       T.ui.error(e);
     }
@@ -25,6 +27,7 @@
     registrar(ruta, fn) { rutas[ruta] = fn; return this; },
     defecto(ruta) { porDefecto = ruta; return this; },
     guardia(fn) { guardia = fn; return this; },
+    alError(fn) { alError = fn; return this; },
     ir(ruta) { if (location.hash === '#' + ruta) resolver(); else location.hash = '#' + ruta; },
     recargar: resolver,
     iniciar() { window.addEventListener('hashchange', resolver); return resolver(); }

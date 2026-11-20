@@ -10,26 +10,33 @@
 //   { accion: "invitar_personal", correo, nombre, rol: SUPERVISOR|ADMIN|ADMIN_PRINCIPAL, area_id? }
 //       → invitación por correo (requiere SMTP configurado en Supabase) y perfil activo con el rol indicado.
 //
-// Despliegue: supabase functions deploy admin-usuarios        (verifica el JWT del llamante)
+// Se despliega CON verificación de JWT (solo usuarios con sesión).
 // Variables: SUPABASE_URL, SUPABASE_ANON_KEY, SUPABASE_SERVICE_ROLE_KEY (automáticas),
-//            APP_ORIGIN, APP_URL y COLABORADORES_DOMINIO (debe coincidir con js/config.js → dominioColaboradores)
+//            APP_ORIGINS (orígenes permitidos separados por coma), APP_URL y COLABORADORES_DOMINIO
+//            (debe coincidir con js/config.js → dominioColaboradores). Sin variables: entorno local de desarrollo.
 // =============================================================================
 import { createClient } from 'npm:@supabase/supabase-js@2.45.4';
 
-const ORIGEN = Deno.env.get('APP_ORIGIN') ?? '';
+const ORIGENES = (Deno.env.get('APP_ORIGINS') ?? 'http://localhost:5610').split(',').map((o) => o.trim()).filter(Boolean);
+const APP_URL = Deno.env.get('APP_URL') ?? ORIGENES[0];
 const DOMINIO = Deno.env.get('COLABORADORES_DOMINIO') ?? 'colaboradores.t360.invalid';
-const CORS = {
-  'Access-Control-Allow-Origin': ORIGEN,
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
-  'Access-Control-Allow-Methods': 'POST, OPTIONS',
-  'Vary': 'Origin',
-};
 const RE_CODIGO = /^[A-Z0-9][A-Z0-9-]{1,19}$/;
 const RE_CORREO = /^[^@\s]+@[^@\s]+\.[^@\s]+$/;
 const ROLES_PERSONAL = ['SUPERVISOR', 'ADMIN', 'ADMIN_PRINCIPAL'];
 
-function respuesta(cuerpo: unknown, estado = 200): Response {
-  return new Response(JSON.stringify(cuerpo), { status: estado, headers: { ...CORS, 'Content-Type': 'application/json' } });
+/** Cabeceras CORS calculadas por petición (nunca compartidas entre peticiones simultáneas). */
+function corsDe(req: Request): { permitido: boolean; cabeceras: Record<string, string> } {
+  const origen = req.headers.get('Origin') ?? '';
+  const permitido = ORIGENES.includes(origen);
+  return {
+    permitido,
+    cabeceras: {
+      'Access-Control-Allow-Origin': permitido ? origen : ORIGENES[0],
+      'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+      'Access-Control-Allow-Methods': 'POST, OPTIONS',
+      'Vary': 'Origin',
+    },
+  };
 }
 function contrasenaAleatoria(): string {
   const b = crypto.getRandomValues(new Uint8Array(32));
@@ -37,9 +44,13 @@ function contrasenaAleatoria(): string {
 }
 
 Deno.serve(async (req: Request) => {
-  if (req.method === 'OPTIONS') return new Response('ok', { headers: CORS });
+  const { permitido, cabeceras } = corsDe(req);
+  const respuesta = (cuerpo: unknown, estado = 200) =>
+    new Response(JSON.stringify(cuerpo), { status: estado, headers: { ...cabeceras, 'Content-Type': 'application/json' } });
+
+  if (req.method === 'OPTIONS') return new Response('ok', { headers: cabeceras });
   if (req.method !== 'POST') return respuesta({ error: 'Método no permitido' }, 405);
-  if (ORIGEN && req.headers.get('Origin') !== ORIGEN) return respuesta({ error: 'Origen no permitido' }, 403);
+  if (!permitido) return respuesta({ error: 'Origen no permitido' }, 403);
 
   const url = Deno.env.get('SUPABASE_URL')!;
   const autorizacion = req.headers.get('Authorization') ?? '';
@@ -72,7 +83,7 @@ Deno.serve(async (req: Request) => {
     });
     if (eCrear || !creado?.user) {
       const duplicado = /already|registered|exists/i.test(eCrear?.message ?? '');
-      return respuesta({ error: duplicado ? 'Ya existe un usuario con ese código de empleado.' : 'No se pudo crear el usuario.' }, duplicado ? 409 : 400);
+      return respuesta({ error: duplicado ? 'Ya existe un usuario con ese código de empleado.' : 'No se pudo crear el usuario: ' + (eCrear?.message ?? '') }, duplicado ? 409 : 400);
     }
     const id = creado.user.id;
     const cambios: Record<string, unknown> = {};
@@ -93,9 +104,7 @@ Deno.serve(async (req: Request) => {
     if (!RE_CORREO.test(correo)) return respuesta({ error: 'Correo no válido.' }, 400);
     if (!ROLES_PERSONAL.includes(rol)) return respuesta({ error: 'Rol no válido.' }, 400);
     if (rol !== 'SUPERVISOR' && !permisos.includes('usuarios.gestionar_staff')) return respuesta({ error: 'Solo el administrador principal invita administradores.' }, 403);
-    const { data: inv, error: eInv } = await admin.auth.admin.inviteUserByEmail(correo, {
-      redirectTo: (Deno.env.get('APP_URL') ?? '') + '/admin.html',
-    });
+    const { data: inv, error: eInv } = await admin.auth.admin.inviteUserByEmail(correo, { redirectTo: APP_URL + '/admin.html' });
     if (eInv || !inv?.user) return respuesta({ error: 'No se pudo enviar la invitación. Revise la configuración de correo (SMTP) en Supabase.' }, 400);
     // El perfil nace inactivo y sin rol; se completa con la RPC auditada, con la identidad de quien invita.
     const { error } = await llamante.rpc('fn_admin_usuario_guardar', {

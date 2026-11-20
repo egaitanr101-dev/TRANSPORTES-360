@@ -16,8 +16,10 @@ T360.config = {
   version: '0.1.0 · Fase 3 · iteración 0',
   zonaHoraria: 'America/Costa_Rica',
   supabase: {
-    url: '',      // Proyecto TRANSPORTES-360 (se completa en la iteración 1, con autorización)
-    anonKey: ''   // Clave publicable (anon). Nunca la service_role
+    // Proyecto TRANSPORTES-360 (conectado el 2026-11-20). Ambos valores son PÚBLICOS por diseño:
+    // la clave "anon" solo identifica el proyecto; los datos los protegen RLS y las funciones del servidor.
+    url: 'https://edtxothslyrdjhcybcjf.supabase.co',
+    anonKey: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVkdHhvdGhzbHlyZGpoY3liY2pmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTUxNzUyNTUsImV4cCI6MjExMDc1MTI1NX0.oyzjvdYOpGZ76SYC8AjBxfOezxNbDEl5JF1JKDIN6Fg'
   },
   // Correo técnico de los colaboradores en Supabase Auth: <código>@<dominio>. No tiene buzón ni recibe correos.
   // DEBE coincidir con la variable COLABORADORES_DOMINIO de la Edge Function admin-usuarios.

@@ -3,7 +3,7 @@
 | Campo | Valor |
 |---|---|
 | Fecha | 2026-11-20 |
-| Estado | **Listo para aplicar en Supabase, pendiente de su ejecución.** Probado en PostgreSQL 17 local con simulación de Supabase. Nada se ejecutó en `TRANSPORTES-360` |
+| Estado | **Aplicado en `TRANSPORTES-360` el 2026-11-20** (por el conector oficial de Supabase, a pedido del usuario). Pendientes del usuario: configuración de Auth, su usuario administrador y las áreas reales (§3.1) |
 | Decisiones aplicadas | D-02 (código + contraseña con activación), D-07 (exclusión del sorteo), D-09 (supervisor sin puntajes individuales) |
 
 ## 1. Qué incluye
@@ -41,7 +41,27 @@
 
 **No probado todavía** (requiere el proyecto real): las Edge Functions (Deno no está instalado aquí), el inicio de sesión real con Supabase Auth, que Auth acepte el dominio técnico `.invalid` y el envío de invitaciones por correo.
 
-## 3. Pasos para aplicarlo en `TRANSPORTES-360` (los ejecuta usted)
+## 3.1 Lo aplicado en `TRANSPORTES-360` (2026-11-20)
+
+| Paso | Resultado |
+|---|---|
+| Revisión previa (solo lectura) | Proyecto vacío: sin tablas propias, funciones, triggers, políticas, buckets, usuarios, migraciones ni Edge Functions. `pgcrypto` instalado. Región us-west-2, PostgreSQL 17 |
+| Migraciones `01`–`04` | Aplicadas sin errores (`app.schema_migrations`: 01, 02, 03, 04) |
+| Pruebas en Supabase | **25 funcionales y 33 de seguridad correctas**. Cada suite termina con un error a propósito para revertir todo: no quedó ningún dato (0 usuarios, 0 perfiles) |
+| Asesores de Supabase | Seguridad: solo avisos esperados (2 tablas con RLS y sin políticas a propósito; 5 RPC ejecutables por usuarios autenticados, que validan permisos por dentro). Rendimiento: se aplicó la migración `sql/migraciones/2026-11-20_01_indices_y_politicas_initplan.sql` (3 índices y políticas con `(select …)`), verificada con 12 comprobaciones de políticas |
+| Edge Functions | `activar-cuenta` (sin verificación de JWT) y `admin-usuarios` (con verificación), activas. Sin variables definidas usan el origen de desarrollo `http://localhost:5610` y el dominio técnico `colaboradores.t360.invalid` |
+| App | `js/config.js` apunta al proyecto (URL y clave pública `anon`). Prueba real sin crear datos: ingreso falso rechazado por Supabase Auth; activación falsa rechazada por la Edge Function con el mensaje genérico; el panel pide correo y contraseña |
+| Modo demostración | Sigue disponible agregando `?demo=1` a la dirección |
+
+### Lo que falta y solo puede hacer usted
+
+1. **Authentication → Sign In / Providers → Email:** desactivar **"Allow new users to sign up"**. Mientras esté activo, alguien podría registrarse: su perfil nacería inactivo y sin rol (no vería nada), pero no debe quedar abierto.
+2. **Authentication → Policies / Passwords:** contraseña mínima de **8** caracteres.
+3. **Authentication → Users → Add user → Create new user:** su correo, una contraseña que solo usted conozca y *Auto Confirm User*.
+4. Decirme su **correo de administrador** y las **áreas reales**: con eso ejecuto `sql/80_arranque_admin.sql` y queda como administrador principal.
+5. Prueba de punta a punta: crear un colaborador de prueba desde el panel, activarlo en la app y confirmar que Supabase acepta el dominio técnico.
+
+## 3. Pasos originales para aplicarlo manualmente (referencia)
 
 > Cada paso se puede revertir con su archivo de `sql/reversion/`. No pegue claves en el chat.
 

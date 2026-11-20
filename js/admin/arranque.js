@@ -17,7 +17,7 @@
       try { T.adm.usuario = await T.api.adminIngresar(form.elements.correo.value, form.elements.contrasena.value); iniciar(); }
       catch (err) { error.textContent = T.ui.mensajeDe(err); b.disabled = false; }
     } },
-      h('div', { class: 'brand', style: 'color:var(--text)' }, T.logo(36), h('div', null, T.config.nombreApp, h('small', { class: 'muted' }, 'PANEL ADMINISTRATIVO'))),
+      h('div', { class: 'brand', style: 'background:var(--navy);color:#fff;padding:.7rem .9rem;border-radius:12px' }, T.logo(36), h('div', null, T.config.nombreApp, h('small', null, 'PANEL ADMINISTRATIVO'))),
       h('div', { class: 'field' }, h('label', { for: 'correo' }, 'Correo'), h('input', { id: 'correo', name: 'correo', type: 'email', autocomplete: 'username', required: true })),
       h('div', { class: 'field' }, h('label', { for: 'contrasena' }, 'Contraseña'), h('input', { id: 'contrasena', name: 'contrasena', type: 'password', autocomplete: 'current-password', required: true })),
       error,
@@ -26,7 +26,16 @@
     form.elements.correo.focus();
   }
 
-  function iniciar() { T.enrutador.defecto('resumen').iniciar(); }
+  function iniciar() {
+    T.enrutador
+      .defecto(T.config.modo === 'SUPABASE' ? 'usuarios' : 'resumen')
+      .alError((e, ruta) => {
+        if (e && e.codigo === 'NO_IMPLEMENTADO') { T.adm.pendiente(ruta); return true; }
+        if (e && e.codigo === 'NO_AUTENTICADO') { ingreso('Su sesión terminó. Ingrese de nuevo.'); return true; }
+        return false;
+      })
+      .iniciar();
+  }
 
   T.listo.then(async () => {
     try { T.adm.usuario = await T.api.adminSesion(); iniciar(); }

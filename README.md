@@ -4,9 +4,9 @@
 
 | | |
 |---|---|
-| Estado | Fase 3 · iteración 1: identidad e ingreso listos y probados en local; pendientes de aplicar en Supabase ([docs/ITERACION_1.md](docs/ITERACION_1.md)). La app funciona en **modo DEMO** |
+| Estado | Fase 3 · iteración 1 aplicada en Supabase: identidad, activación de cuentas e ingreso ([docs/ITERACION_1.md](docs/ITERACION_1.md)). El contenido (capacitación, alertas, sorteo) llega en las iteraciones siguientes |
 | Tecnología | HTML + CSS + JavaScript sin compilación, sin npm. Backend: Supabase (Auth, PostgreSQL con RLS, Storage, Edge Functions) |
-| Proyecto Supabase | `TRANSPORTES-360` (aún no conectado; se conecta en la iteración 1 con autorización) |
+| Proyecto Supabase | `TRANSPORTES-360` (conectado). Modo demostración con datos ficticios: agregar `?demo=1` a la dirección |
 
 ## Cómo abrirla en este equipo
 
@@ -14,8 +14,8 @@
 powershell -NoProfile -ExecutionPolicy Bypass -File tools\servidor-local.ps1
 ```
 
-- App del colaborador: `http://localhost:5610/` — en modo DEMO use el código **TR-0417** y cualquier contraseña de 8 caracteres o más (para "Activar mi cuenta", el código **DEMO-2026**).
-- Panel administrativo: `http://localhost:5610/admin.html`
+- App del colaborador: `http://localhost:5610/` (conectada a Supabase). Demostración: `http://localhost:5610/?demo=1` con el código **TR-0417** y cualquier contraseña de 8 caracteres o más (para "Activar mi cuenta", el código **DEMO-2026**).
+- Panel administrativo: `http://localhost:5610/admin.html` (demostración: `admin.html?demo=1`)
 - Prototipo de diseño de la Fase 2: `http://localhost:5610/prototipo/`
 
 El servidor solo escucha en `localhost`, no instala nada y no sirve las carpetas `docs/`, `sql/`, `supabase/` ni `tools/`.
