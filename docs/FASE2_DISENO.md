@@ -73,7 +73,7 @@ D-02, D-04, D-05, D-07, D-08 y D-09 fueron aprobadas por el usuario el 2026-11-2
 | D-11 | Extracción documental | PDF con la entrada de documentos de Claude; DOCX/PPTX/XLSX en el navegador del administrador | Recomendación adoptada (se confirma en la iteración 6) |
 | D-12 | Búsqueda | Texto completo de PostgreSQL; pgvector después si hace falta | Recomendación adoptada |
 | D-13 | Identidad gráfica | Marca provisional "anillo 360" del prototipo hasta recibir logo oficial | Pendiente de material del usuario |
-| D-14 | Control de versiones | Instalar Git + repositorio privado | ✅ Git 2.56 instalado y repositorio local creado (2026-11-20). GitHub privado: pendiente de su indicación |
+| D-14 | Control de versiones | Instalar Git + repositorio privado | ✅ Git 2.56 instalado (2026-11-20). Repositorio `egaitanr101-dev/TRANSPORTES-360` en GitHub, **público por decisión del usuario** (se recomendó privado; riesgo R-83 aceptado). Commits con correo `noreply` de GitHub |
 | D-15 | Plan de Supabase | Gratuito en desarrollo; pago antes de la operación real | Recomendación adoptada |
 | D-16 | Entradas | `index.html` + `admin.html` | Recomendación adoptada |
 | D-17 | Conservación de datos | Intentos 24 meses; sorteos y auditoría 5 años; temporales 30 días | Pendiente de Legal/RRHH (no bloquea la Fase 3) |
@@ -364,6 +364,7 @@ Los riesgos de RIESGOS_Y_SEGURIDAD siguen vigentes. Nuevos o actualizados:
 | R-80 | Que el prototipo se tome por la aplicación real (contiene la clave de respuestas en el navegador, a propósito, para simular) | Franja "PROTOTIPO" en cada pantalla, comentarios en el código, carpeta separada; no se publica y se elimina tras la Fase 4 |
 | R-81 | Configuración del proyecto `TRANSPORTES-360` desconocida (autorregistro abierto, extensiones, plan) | Verificación de §9 antes de la primera migración |
 | R-82 | Ejecutar SQL desde el SQL Editor sin registro | `app.schema_migrations` + un archivo por envío + verificación posterior (§6.2) |
+| R-83 | **Repositorio público** (decisión del usuario, 2026-11-20): cualquiera puede leer la documentación interna, el diseño de seguridad y el contenido de las cápsulas antes de publicarse | Nunca subir secretos, datos reales ni contenido de producción (`.gitignore` + revisión antes de cada commit); las respuestas reales viven solo en Supabase, nunca en el repositorio; la seguridad no depende de que el código sea secreto (RLS y servidor). Revisar la visibilidad antes de la Fase 5 |
 
 ## 9. Verificación de Supabase todavía pendiente
 
