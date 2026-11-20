@@ -41,6 +41,19 @@
 
 **No probado todavía** (requiere el proyecto real): las Edge Functions (Deno no está instalado aquí), el inicio de sesión real con Supabase Auth, que Auth acepte el dominio técnico `.invalid` y el envío de invitaciones por correo.
 
+## 2.1 Importación masiva de colaboradores (decisión del usuario, 2026-11-20)
+
+El usuario propuso que la contraseña inicial fuera el número de empleado. Se le explicó el riesgo (los números son conocidos: cualquiera que sepa el de otro podría entrar primero y quedarse con su cuenta; forzar el cambio al primer ingreso no lo evita) y **eligió la alternativa recomendada: carga masiva con códigos impresos.**
+
+| Pieza | Detalle |
+|---|---|
+| Panel → Usuarios → **Importar lista** | Excel (.xlsx) o CSV, leído en el navegador (SheetJS 0.20.3, copiado de ArreoPrime y cargado solo en esta pantalla). Columnas reconocidas por su encabezado: número de empleado, nombre completo, área, supervisor (correo o código). Botón "Descargar plantilla" |
+| Vista previa | Antes de crear nada marca: número inválido, nombre vacío, repetido en el archivo, ya existe en la plataforma; avisa si el supervisor no está registrado |
+| Creación | Lotes de 50 por la Edge Function `admin-usuarios` (acción `importar_colaboradores`); una sola RPC por lote (`fn_importar_completar`) asigna área (la crea si no existe) y supervisor, y emite un **código distinto por persona** |
+| Vigencia | 7, 14 (por defecto, parámetro `activation_hours_masiva`) o 30 días |
+| Hoja imprimible | Una tarjeta por persona para recortar: nombre, número, código, vencimiento, pasos de activación y aviso de no compartirlo. Los códigos solo se ven en esa pantalla; la página avisa si intenta salir sin imprimir |
+| Pruebas | `sql/97_pruebas_importacion.sql`: 17 pruebas, correctas en local y en Supabase. Demostración probada con un CSV con errores a propósito y con un Excel de 120 filas (3 lotes, 120 códigos distintos) |
+
 ## 3.1 Lo aplicado en `TRANSPORTES-360` (2026-11-20)
 
 | Paso | Resultado |

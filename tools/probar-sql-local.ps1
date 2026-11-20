@@ -14,7 +14,10 @@ $env:PGCLIENTENCODING = 'UTF8'
 if ($LASTEXITCODE -ne 0) { exit 1 }
 
 $scripts = @('sql\local\00_simulacion_supabase.sql', 'sql\01_base.sql', 'sql\02_identidad.sql', 'sql\03_catalogos.sql',
-             'sql\04_seguridad.sql', 'sql\98_pruebas_funcionales.sql', 'sql\99_pruebas_seguridad.sql')
+             'sql\04_seguridad.sql')
+# Migraciones fechadas, en orden de nombre
+$scripts += Get-ChildItem (Join-Path $raiz 'sql\migraciones') -Filter '*.sql' | Sort-Object Name | ForEach-Object { 'sql\migraciones\' + $_.Name }
+$scripts += @('sql\97_pruebas_importacion.sql', 'sql\98_pruebas_funcionales.sql', 'sql\99_pruebas_seguridad.sql')
 foreach ($s in $scripts) {
   Write-Host "== $s"
   & $psql -h localhost -p $Puerto -U postgres -d t360_pruebas -v ON_ERROR_STOP=1 -q -X -f (Join-Path $raiz $s)

@@ -115,6 +115,13 @@
           return funcion('admin-usuarios', { accion: 'invitar_personal', correo: d.correo, nombre: d.nombre, rol: d.rol, area_id: d.area || null });
         },
         async emitirActivacion(id) { return rpc('fn_emitir_activacion', { p_usuario: id }); },
+        /** Un lote (máx. 50). Devuelve { creados: [{ id, codigo, nombre, area, supervisor, codigo_activacion, vence, aviso }], omitidos: [{ codigo, motivo }] } */
+        async importarColaboradores(filas, horas) {
+          return funcion('admin-usuarios', {
+            accion: 'importar_colaboradores', horas,
+            filas: filas.map(f => ({ codigo_empleado: f.codigo, nombre: f.nombre, area: f.area || null, supervisor: f.supervisor || null }))
+          });
+        },
         async guardarUsuario(id, cambios) { return rpc('fn_admin_usuario_guardar', { p_usuario: id, p: cambios }); }
       };
 

@@ -21,6 +21,8 @@ T360.config = {
     url: 'https://edtxothslyrdjhcybcjf.supabase.co',
     anonKey: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVkdHhvdGhzbHlyZGpoY3liY2pmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTUxNzUyNTUsImV4cCI6MjExMDc1MTI1NX0.oyzjvdYOpGZ76SYC8AjBxfOezxNbDEl5JF1JKDIN6Fg'
   },
+  // Dirección pública de la app (se imprime en las tarjetas de activación). Vacía = la dirección actual.
+  urlPublica: '',
   // Correo técnico de los colaboradores en Supabase Auth: <código>@<dominio>. No tiene buzón ni recibe correos.
   // DEBE coincidir con la variable COLABORADORES_DOMINIO de la Edge Function admin-usuarios.
   dominioColaboradores: 'colaboradores.t360.invalid'

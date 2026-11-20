@@ -61,7 +61,7 @@ D-02, D-04, D-05, D-07, D-08 y D-09 fueron aprobadas por el usuario el 2026-11-2
 | ID | Decisión | Propuesta | Estado |
 |---|---|---|---|
 | D-01 | Proyecto Supabase | `TRANSPORTES-360`, dedicado; se usa para desarrollo y pruebas | ✅ Resuelta |
-| D-02 | Ingreso de colaboradores | Código de empleado + contraseña personal, activada con un código de un solo uso | ✅ Aprobada (2026-11-20) |
+| D-02 | Ingreso de colaboradores | Código de empleado + contraseña personal, activada con un código de un solo uso | ✅ Aprobada (2026-11-20). Ampliada: carga masiva desde Excel con códigos impresos de 14 días (se descartó usar el número de empleado como contraseña inicial; ver ITERACION_1 §2.1) |
 | D-03 | Idioma del modelo de datos | Inglés | Recomendación adoptada |
 | D-04 | Política de intentos | Primer intento oficial + práctica que no cuenta | ✅ Aprobada (2026-11-20) |
 | D-05 | Retroalimentación | Inmediata tras el intento oficial | ✅ Aprobada (2026-11-20) |

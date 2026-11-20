@@ -194,6 +194,34 @@
       return { id: nuevo.id, codigo: act.codigo, vence: act.vence };
     },
 
+    /** Simula admin-usuarios → importar_colaboradores + fn_importar_completar (un lote de hasta 50). */
+    async importarColaboradores(filas, horas) {
+      await espera(400);
+      if (!Array.isArray(filas) || filas.length < 1 || filas.length > 50) throw T.error('VALIDACION', 'Envíe entre 1 y 50 filas por lote.');
+      const creados = [], omitidos = [];
+      for (const f of filas) {
+        const codigo = String(f.codigo || '').trim().toUpperCase();
+        const nombre = String(f.nombre || '').trim();
+        if (!RE_CODIGO.test(codigo)) { omitidos.push({ codigo, motivo: 'Código no válido' }); continue; }
+        if (nombre.length < 3) { omitidos.push({ codigo, motivo: 'Nombre no válido' }); continue; }
+        if (D.usuarios.some(u => u.codigo === codigo)) { omitidos.push({ codigo, motivo: 'Ya existe' }); continue; }
+        let area = null;
+        if (f.area) {
+          area = D.areas.find(a => a.nombre.toLowerCase() === String(f.area).trim().toLowerCase());
+          if (!area) { area = { id: String(f.area).toUpperCase().replace(/[^A-Z0-9]+/g, '_').slice(0, 20), nombre: String(f.area).trim() }; D.areas.push(area); }
+        }
+        const s = f.supervisor ? String(f.supervisor).trim().toLowerCase() : '';
+        const sup = s ? D.usuarios.find(u => u.activo && u.rol !== 'COLABORADOR' && ((u.correo || '') === s || (u.codigo || '').toLowerCase() === s)) : null;
+        const u = { id: 'u-demo-' + codigo.toLowerCase(), nombre, codigo, correo: null, rol: 'COLABORADOR', area: area ? area.nombre : null, supervisor: sup ? sup.nombre : null, activo: false, activacion: 'SIN_CODIGO', activacion_vence: null };
+        D.usuarios.push(u);
+        const act = await T.apiMock.emitirActivacion(u.id);
+        const vence = new Date(Date.now() + (horas || 336) * 3600 * 1000).toISOString();
+        u.activacion_vence = vence;
+        creados.push({ id: u.id, codigo, nombre, area: u.area, supervisor: u.supervisor, codigo_activacion: act.codigo, vence, aviso: s && !sup ? 'Supervisor no encontrado: ' + f.supervisor : null });
+      }
+      return { creados, omitidos };
+    },
+
     async invitarPersonal(d) {
       await espera(300);
       if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(String(d.correo || ''))) throw T.error('VALIDACION', 'Correo no válido.');
