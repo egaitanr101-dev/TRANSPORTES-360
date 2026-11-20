@@ -4,7 +4,7 @@
 
 | | |
 |---|---|
-| Estado | Fase 3: iteraciones 1 (identidad, activación, importación masiva) y 2 (capacitación semanal) aplicadas en Supabase ([docs/ITERACION_1.md](docs/ITERACION_1.md), [docs/ITERACION_2.md](docs/ITERACION_2.md)). Siguen: cierre y sorteo, alertas y consejos, IA, biblioteca, campañas, reportes |
+| Estado | Fase 3: iteraciones 1 (identidad, activación, importación masiva), 2 (capacitación semanal) y 3 (cierre y sorteo) aplicadas en Supabase ([docs/ITERACION_1.md](docs/ITERACION_1.md), [docs/ITERACION_2.md](docs/ITERACION_2.md), [docs/ITERACION_3.md](docs/ITERACION_3.md)). Siguen: alertas y consejos, IA, biblioteca, campañas, reportes |
 | Tecnología | HTML + CSS + JavaScript sin compilación, sin npm. Backend: Supabase (Auth, PostgreSQL con RLS, Storage, Edge Functions) |
 | Proyecto Supabase | `TRANSPORTES-360` (conectado). Modo demostración con datos ficticios: agregar `?demo=1` a la dirección |
 
@@ -26,7 +26,7 @@ El servidor solo escucha en `localhost`, no instala nada y no sirve las carpetas
 powershell -NoProfile -ExecutionPolicy Bypass -File tools\probar-sql-local.ps1 -PgBin "<carpeta bin de PostgreSQL 17>"
 ```
 
-Aplica `sql/01`–`04` sobre una simulación de Supabase y ejecuta las pruebas funcionales y de seguridad.
+Aplica `sql/01`–`06` y las migraciones sobre una simulación de Supabase y ejecuta todas las pruebas (`sql/95`–`99`).
 
 ## Estructura
 
@@ -40,7 +40,7 @@ js/colaborador/ · js/admin/  Pantallas
 js/vendor/                   supabase-js 2.45.4 (versión fija, local)
 assets/img/                  Ilustraciones propias (SVG)
 docs/                        Auditoría, plan, mapa funcional, modelo de datos, riesgos, diseño, iteraciones
-sql/                         Migraciones numeradas, pruebas (98, 99), reversión y arranque; local/ solo para pruebas
+sql/                         Migraciones numeradas, pruebas (95–99), reversión y arranque; local/ solo para pruebas
 supabase/functions/          Edge Functions (activar-cuenta, admin-usuarios)
 tools/                       Servidor local y pruebas SQL locales
 prototipo/                   Referencia de diseño de la Fase 2

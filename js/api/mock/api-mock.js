@@ -21,7 +21,8 @@
     idempotencia: {},      // clave → resultado
     vistas: new Set(),
     confirmadas: new Map(D.alertas.filter(a => a.confirmada).map(a => [a.id, 'antes'])),
-    sorteos: {},
+    sorteos: {},           // semanaId → { cerrada, vigente, anulados }
+    premios: D.premios.map(p => Object.assign({}, p)),
     semanas: []
   };
 
@@ -98,7 +99,7 @@
       return copia({
         usuario: D.usuario, semana: semanaActual(),
         alertasPendientes: pendientes.map(a => ({ id: a.id, titulo: a.titulo, prioridad: a.prioridad })),
-        consejo: D.consejo, categorias: D.categorias, reconocimientos: D.reconocimientos
+        consejo: D.consejo, categorias: D.categorias, reconocimientos: D.reconocimientos, premios: estado.premios
       });
     },
 
@@ -332,38 +333,78 @@
       return { borrador_id: D.borrador.id };
     },
 
-    async sorteoSemana(n) {
+    // ---------- Panel: cierre y sorteo (simula fn_admin_sorteo, fn_cerrar_semana, fn_ejecutar_sorteo, fn_anular_sorteo) ----------
+    async semanasSorteo() {
       await espera();
-      const s = D.sorteo[n];
-      if (!s) throw T.error('NO_ENCONTRADO', 'Semana no encontrada.');
-      const r = copia(s);
-      r.elegibles.sort((a, b) => a.id.localeCompare(b.id));
-      r.sorteo = estado.sorteos[n] ? copia(estado.sorteos[n]) : null;
-      return r;
+      return Object.entries(D.sorteo).map(([id, s]) => ({ id, titulo: s.titulo, week_start: s.week_start, week_end: s.week_end, estado: 'PUBLICADO' }));
     },
-
-    async ejecutarSorteo(n) {
-      await espera(300);
-      if (estado.sorteos[n]) return Object.assign(copia(estado.sorteos[n]), { yaExistia: true });   // idempotente
-      const s = D.sorteo[n];
+    async sorteoSemana(id) {
+      await espera();
+      const s = D.sorteo[id];
       if (!s) throw T.error('NO_ENCONTRADO', 'Semana no encontrada.');
-      const lista = s.elegibles.slice().sort((a, b) => a.id.localeCompare(b.id));
+      const e = estadoSorteo(id);
+      const cerrada = !!e.cerrada;
+      return copia({
+        semana: { id, titulo: s.titulo, week_start: s.week_start, week_end: s.week_end, cerrada, cerrada_el: e.cerrada || null, puede_cerrar: !cerrada && !s.enCurso },
+        base: cerrada ? s.base : null, participaron: cerrada ? s.participaron : 0, completaron: cerrada ? s.completaron : 0, excluidos: cerrada ? s.excluidos : 0,
+        maximo: cerrada ? s.maximo : null,
+        elegibles: cerrada ? s.elegibles.slice().sort((a, b) => (a.id < b.id ? -1 : 1)) : [],
+        sorteo: e.vigente, anulados: e.anulados
+      });
+    },
+    async cerrarSemana(id) {
+      await espera(250);
+      const s = D.sorteo[id], e = estadoSorteo(id);
+      if (!s) throw T.error('NO_ENCONTRADO', 'Semana no encontrada.');
+      if (e.cerrada) return { cerrada: true, ya_estaba: true };
+      if (s.enCurso) throw T.error('VALIDACION', 'La semana termina el domingo ' + s.week_end.slice(8) + ' a las 11:59 p. m.; todavía no se puede cerrar.');
+      e.cerrada = new Date().toISOString();
+      return { cerrada: true, ya_estaba: false, resultados: s.base };
+    },
+    async ejecutarSorteo(id) {
+      await espera(300);
+      const s = D.sorteo[id], e = estadoSorteo(id);
+      if (!s) throw T.error('NO_ENCONTRADO', 'Semana no encontrada.');
+      if (e.vigente) return { id: e.vigente.id, ya_existia: true };              // idempotente
+      if (!e.cerrada) await T.apiMock.cerrarSemana(id);                           // cierre perezoso
+      const lista = s.elegibles.slice().sort((a, b) => (a.id < b.id ? -1 : 1));
       const total = lista.length;
-      const limite = Math.floor(0x100000000 / total) * total;
+      const limite = Math.floor(0x100000000 / total) * total;                     // rechazo: sin sesgo de módulo
       const buf = new Uint32Array(1);
-      let valor, intentos = 0;
-      do { crypto.getRandomValues(buf); valor = buf[0]; intentos++; } while (valor >= limite);
+      let valor, hex = '';
+      do { crypto.getRandomValues(buf); valor = buf[0]; hex += valor.toString(16).padStart(8, '0'); } while (valor >= limite);
       let hash = '(requiere https o localhost)';
       if (crypto.subtle) {
-        const bytes = new TextEncoder().encode(lista.map(e => e.id).join('\n') + '\n' + s.maximo);
+        const bytes = new TextEncoder().encode(lista.map(x => x.id).join('\n') + '\n' + s.maximo);
         hash = Array.from(new Uint8Array(await crypto.subtle.digest('SHA-256', bytes)), b => b.toString(16).padStart(2, '0')).join('');
       }
-      estado.sorteos[n] = {
-        estado: 'OFICIAL', ganador: lista[valor % total], maximo: s.maximo, n: total, valor, intentos, posicion: valor % total,
-        hash, algoritmo: 'v1-rejection-u32', ejecutadoPor: D.admin.nombre,
-        fecha: new Date().toLocaleString('es-CR', { timeZone: T.config.zonaHoraria })
+      const g = lista[valor % total];
+      e.vigente = {
+        id: 'draw-' + Date.now(), estado: 'OFICIAL', maximo: s.maximo, n: total, fecha: new Date().toISOString(), ejecutadoPor: D.admin.nombre,
+        ganador: { codigo: g.codigo, nombre: g.nombre }, bytes: hex, hash, algoritmo: 'v1-rejection-u32 (demostración: bytes del navegador)',
+        reemplaza: e.anulados.length ? e.anulados[e.anulados.length - 1].id : null
       };
-      return copia(estado.sorteos[n]);
+      return { id: e.vigente.id, ya_existia: false };
+    },
+    async anularSorteo(idSorteo, motivo) {
+      await espera(250);
+      if (String(motivo || '').trim().length < 10) throw T.error('VALIDACION', 'Explique el motivo de la anulación (mínimo 10 caracteres).');
+      const e = Object.values(estado.sorteos).find(x => x.vigente && x.vigente.id === idSorteo);
+      if (!e) throw T.error('VALIDACION', 'Ese sorteo ya está anulado.');
+      const v = e.vigente;
+      e.anulados.push({ id: v.id, fecha: v.fecha, anulado: new Date().toISOString(), motivo: String(motivo).trim(), ganador: v.ganador.nombre, anuladoPor: D.admin.nombre });
+      e.vigente = null;
+      return { estado: 'ANULADO' };
+    },
+
+    // ---------- Colaborador: consentimiento del ganador (D-08) ----------
+    async reconocimientoPublico(id, publico) {
+      exigirSesion(); await espera();
+      const p = estado.premios.find(x => x.id === id);
+      if (!p) throw T.error('NO_ENCONTRADO', 'Reconocimiento no encontrado.');
+      p.publico = !!publico;
     }
   };
+
+  function estadoSorteo(id) { return estado.sorteos[id] || (estado.sorteos[id] = { cerrada: null, vigente: null, anulados: [] }); }
 })(window.T360);

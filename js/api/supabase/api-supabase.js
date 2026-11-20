@@ -48,6 +48,13 @@
       function usuarioDe(p) {
         return { id: p.id, nombre: p.nombre, iniciales: p.iniciales || '?', codigo: p.codigo || '', area: p.area || 'Sin área', rol: p.rol, rolNombre: p.rol_nombre, permisos: p.permisos || [], privacidadAceptada: !!p.privacidad_aceptada };
       }
+      /** fn_reconocimientos → tarjetas para el inicio y los premios propios (con su consentimiento de publicación, D-08). */
+      function reconocimientosDe(r) {
+        const propios = (r && r.propios) || [];
+        const tarjetas = ((r && r.ganadores) || []).map(g => ({ icono: 'gift', titulo: 'Ganador S' + g.semana, detalle: g.nombre }))
+          .concat(propios.filter(p => p.tipo === 'SEMANA_PERFECTA').map(p => ({ icono: 'star', titulo: 'Semana perfecta', detalle: 'Usted · S' + p.semana })));
+        return { reconocimientos: tarjetas, premios: propios.filter(p => p.tipo === 'GANADOR_SORTEO').map(p => ({ id: p.id, semana: p.semana, tema: p.tema, publico: !!p.publico })) };
+      }
       async function perfil() {
         try { return usuarioDe(await rpc('fn_mi_perfil')); }
         catch (e) { if (e.codigo === 'NO_AUTENTICADO') await cliente.auth.signOut(); throw e; }
@@ -81,13 +88,16 @@
         // ---------- Colaborador ----------
         async inicio() {
           const usuario = await perfil();
-          const [semana, cats] = await Promise.all([
+          const [semana, cats, rec] = await Promise.all([
             rpc('fn_semana_actual'),
-            cliente.from('knowledge_categories').select('name, icon').eq('is_active', true).order('sort_order')
+            cliente.from('knowledge_categories').select('name, icon').eq('is_active', true).order('sort_order'),
+            rpc('fn_reconocimientos')
           ]);
           if (cats.error) throw traducir(cats.error);
-          return { usuario, semana: semana || null, alertasPendientes: [], consejo: null, reconocimientos: [], categorias: (cats.data || []).map(c => ({ icono: c.icon, nombre: c.name })) };
+          return Object.assign({ usuario, semana: semana || null, alertasPendientes: [], consejo: null, categorias: (cats.data || []).map(c => ({ icono: c.icon, nombre: c.name })) },
+                               reconocimientosDe(rec));
         },
+        async reconocimientoPublico(id, publico) { await rpc('fn_reconocimiento_publico', { p_id: id, p_publico: !!publico }); },
         async semana() { return (await rpc('fn_semana_actual')) || null; },
         async capsula(id) { return rpc('fn_capsula', { p_id: id }); },
         async responderCapsula(id, respuestas, clave) { return rpc('fn_responder_capsula', { p_capsula: id, p_respuestas: respuestas, p_clave: clave }); },
@@ -111,6 +121,17 @@
         async aprobarSemana(id, comentario) { return rpc('fn_admin_semana_aprobar', { p_id: id, p_comentario: comentario || null }); },
         async archivarSemana(id, comentario) { return rpc('fn_admin_semana_archivar', { p_id: id, p_comentario: comentario || null }); },
         async eliminarSemana(id) { return rpc('fn_admin_semana_eliminar', { p_id: id }); },
+
+        // ---------- Panel: cierre y sorteo ----------
+        /** Semanas ya publicadas (las únicas que se cierran y sortean), de la más reciente a la más antigua. */
+        async semanasSorteo() {
+          const hoy = new Date().toLocaleDateString('en-CA', { timeZone: T.config.zonaHoraria });
+          return (await rpc('fn_admin_semanas')).filter(s => ['PROGRAMADO', 'PUBLICADO'].includes(s.estado) && s.week_start <= hoy);
+        },
+        async sorteoSemana(id) { return rpc('fn_admin_sorteo', { p_semana: id }); },
+        async cerrarSemana(id) { return rpc('fn_cerrar_semana', { p_semana: id }); },
+        async ejecutarSorteo(id) { return rpc('fn_ejecutar_sorteo', { p_semana: id }); },
+        async anularSorteo(id, motivo) { return rpc('fn_anular_sorteo', { p_sorteo: id, p_motivo: motivo }); },
 
         // ---------- Panel ----------
         async adminSesion() {
@@ -150,7 +171,7 @@
         async guardarUsuario(id, cambios) { return rpc('fn_admin_usuario_guardar', { p_usuario: id, p: cambios }); }
       };
 
-      const PENDIENTES = ['alerta', 'confirmarAlerta', 'resumen', 'generarBorrador', 'borrador', 'sorteoSemana', 'ejecutarSorteo'];
+      const PENDIENTES = ['alerta', 'confirmarAlerta', 'resumen', 'generarBorrador', 'borrador'];
       for (const m of PENDIENTES) api[m] = () => Promise.reject(T.error('NO_IMPLEMENTADO', 'Pendiente de su iteración: ' + m));
       return api;
     }

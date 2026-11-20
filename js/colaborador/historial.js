@@ -15,7 +15,7 @@
           h('span', { class: 'day' }, s.semana),
           h('span', { class: 'grow' }, h('span', { class: 'title' }, s.tema),
             h('span', { class: 'small muted' }, s.estado + ' · ' + s.capsulas + ' de 5 cápsulas' +
-              (s.estado === 'Cerrada' ? (s.capsulas === 5 ? ' · participó en el sorteo' : ' · no participó en el sorteo') : ''))),
+              (s.estado === 'Cerrada' && s.participo != null ? (s.participo ? ' · participó en el sorteo' : ' · no participó en el sorteo') : ''))),
           h('span', { class: 'row', style: 'flex-direction:column;gap:.25rem;align-items:flex-end' },
             h('strong', null, s.puntos + '/10'),
             s.insignia ? h('span', { class: 'chip gold' }, s.insignia) : null))))),

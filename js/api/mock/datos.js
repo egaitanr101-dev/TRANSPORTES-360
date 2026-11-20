@@ -10,7 +10,7 @@
     usuario: { id: 'u-demo-0417', nombre: 'María Fernández', iniciales: 'MF', codigo: 'TR-0417', area: 'Distribución GAM', rol: 'COLABORADOR', privacidadAceptada: true },
     admin: {
       id: 'u-demo-admin', nombre: 'Ana Solís', rol: 'Administrador',
-      permisos: ['contenido.crear_editar', 'contenido.aprobar', 'ia.generar', 'reportes.ver', 'sorteo.ejecutar', 'semana.cerrar', 'usuarios.gestionar']
+      permisos: ['contenido.crear_editar', 'contenido.aprobar', 'ia.generar', 'reportes.ver', 'sorteo.ejecutar', 'sorteo.anular', 'semana.cerrar', 'usuarios.gestionar']
     },
     // Ejemplo de cápsula para precargar el editor ("Usar ejemplo"): la cápsula interactiva de la demostración
     get ejemploCapsula() {
@@ -165,9 +165,9 @@
     ],
 
     historial: [
-      { semana: 46, tema: 'Fatiga y somnolencia al volante', estado: 'Cerrada', capsulas: 5, puntos: 9 },
-      { semana: 45, tema: 'Presupuesto familiar', estado: 'Cerrada', capsulas: 5, puntos: 10, insignia: 'Semana perfecta' },
-      { semana: 44, tema: 'Hidratación en jornadas largas', estado: 'Cerrada', capsulas: 4, puntos: 7 }
+      { semana: 46, tema: 'Fatiga y somnolencia al volante', estado: 'Cerrada', capsulas: 5, puntos: 9, participo: true },
+      { semana: 45, tema: 'Presupuesto familiar', estado: 'Cerrada', capsulas: 5, puntos: 10, participo: true, insignia: 'Semana perfecta' },
+      { semana: 44, tema: 'Hidratación en jornadas largas', estado: 'Cerrada', capsulas: 4, puntos: 7, participo: false }
     ],
 
     // ---------- Panel ----------
@@ -213,13 +213,16 @@
       ]
     },
 
+    // Cierre y sorteo (misma forma que fn_admin_sorteo). La semana 46 ya terminó y está lista para cerrar; la 47 está en curso.
+    premios: [{ id: 'rec-45', semana: 45, tema: 'Presupuesto familiar', publico: false }],
     sorteo: {
-      46: {
-        semana: 46, tema: 'Fatiga y somnolencia al volante', cerrada: 'domingo 16 nov, 23:59',
-        activos: 142, completaron: 97, maximo: 9, excluidos: 4,
+      'sem-47': { titulo: 'Prevención de estafas digitales', week_start: '2026-11-16', week_end: '2026-11-22', enCurso: true },
+      'sem-46': {
+        titulo: 'Fatiga y somnolencia al volante', week_start: '2026-11-09', week_end: '2026-11-15',
+        base: 142, participaron: 121, completaron: 97, maximo: 9, excluidos: 2,
         elegibles: ['J. Rodríguez', 'M. Vargas', 'L. Mora', 'K. Jiménez', 'A. Rojas', 'D. Castro', 'S. Araya', 'P. Solano', 'E. Quesada', 'R. Alfaro']
           .concat(['J. Rodríguez', 'M. Vargas', 'L. Mora', 'K. Jiménez', 'A. Rojas', 'D. Castro', 'S. Araya', 'P. Solano', 'E. Quesada', 'R. Alfaro', 'J. Rodríguez', 'M. Vargas', 'L. Mora'])
-          .map((nombre, i) => ({ id: 'u' + String(1000 + i * 37).padStart(5, '0'), codigo: 'TR-' + String(101 + i * 13).padStart(4, '0'), nombre }))
+          .map((nombre, i) => ({ id: 'u' + String(1000 + i * 37).padStart(5, '0'), codigo: 'TR-' + String(101 + i * 13).padStart(4, '0'), nombre, puntos: 9 }))
       }
     },
 
