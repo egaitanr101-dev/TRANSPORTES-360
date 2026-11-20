@@ -57,8 +57,8 @@
 
 1. **Authentication → Sign In / Providers → Email:** desactivar **"Allow new users to sign up"**. Mientras esté activo, alguien podría registrarse: su perfil nacería inactivo y sin rol (no vería nada), pero no debe quedar abierto.
 2. **Authentication → Policies / Passwords:** contraseña mínima de **8** caracteres.
-3. **Authentication → Users → Add user → Create new user:** su correo, una contraseña que solo usted conozca y *Auto Confirm User*.
-4. Decirme su **correo de administrador** y las **áreas reales**: con eso ejecuto `sql/80_arranque_admin.sql` y queda como administrador principal.
+3. ~~Crear su usuario en Authentication → Users~~ → **hecho**: el trigger creó su perfil inactivo y sin rol.
+4. ~~Activarlo como administrador principal~~ → **hecho el 2026-11-20** (auditado como `ARRANQUE_ADMIN`; verificado con `fn_mi_perfil`: rol `ADMIN_PRINCIPAL`, acceso a usuarios, administradores y auditoría; fuera del sorteo). **Pendiente: las áreas reales** (sin ellas los colaboradores quedan "sin área").
 5. Prueba de punta a punta: crear un colaborador de prueba desde el panel, activarlo en la app y confirmar que Supabase acepta el dominio técnico.
 
 ## 3. Pasos originales para aplicarlo manualmente (referencia)
