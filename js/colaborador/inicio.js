@@ -33,11 +33,7 @@
       pend.length ? h('a', { class: 'alert-strip' + (pend[0].prioridad === 'CRITICA' ? ' crit' : ''), href: '#alerta/' + encodeURIComponent(pend[0].id) },
         icon('alert'), h('span', { style: 'flex:1' }, (pend.length === 1 ? '1 alerta por confirmar: ' : pend.length + ' alertas por confirmar: ') + pend[0].titulo), icon('chevron', 'sm')) : null,
       (d.premios || []).slice(0, 1).map(tarjetaPremio),
-      d.consejo ? h('section', { class: 'card tip', 'aria-labelledby': 'tit-tip' },
-        h('div', { class: 'label' }, 'Consejo breve · 30 s'),
-        h('h2', { id: 'tit-tip' }, d.consejo.titulo),
-        h('p', null, d.consejo.texto),
-        h('a', { class: 'btn wa', href: 'https://wa.me/?text=' + encodeURIComponent(d.consejo.compartir), target: '_blank', rel: 'noopener noreferrer' }, icon('share', 'sm'), 'Compartir por WhatsApp')) : null,
+      d.consejo ? [T.consejoVista(d.consejo, 'Consejo del día · 30 s'), h('p', { class: 'small' }, h('a', { href: '#consejos' }, 'Ver todos los consejos'))] : null,
       h('div', { class: 'section-title' }, h('h2', null, 'Aprenda sobre')),
       h('div', { class: 'cats' }, d.categorias.map(c => h('div', { class: 'cat' }, icon(c.icono), c.nombre))),
       d.reconocimientos.length ? [

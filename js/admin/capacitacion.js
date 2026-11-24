@@ -98,14 +98,23 @@
   // ---------- Revisión: semanas pendientes de aprobar ----------
   T.enrutador.registrar('revision', async () => {
     T.adm.cargando('revision');
-    const pendientes = (await T.api.semanasAdmin()).filter(s => s.estado === 'PENDIENTE_REVISION');
+    const enRevision = (x) => x.estado === 'PENDIENTE_REVISION';
+    const [semanas, alertas, consejos] = await Promise.all([T.api.semanasAdmin(), T.api.alertasAdmin(), T.api.consejosAdmin()]);
+    const pendientes = semanas.filter(enRevision);
+    const otros = alertas.filter(enRevision).map(a => Object.assign({ tipo: 'alerta', detalle: 'alerta ' + T.prioridad.texto(a.prioridad).toLowerCase() }, a))
+      .concat(consejos.filter(enRevision).map(c => Object.assign({ tipo: 'consejo', detalle: 'consejo' }, c)));
     T.adm.marco('revision',
-      h('header', null, h('div', null, h('h1', null, 'Revisión y aprobación'), h('p', { class: 'muted', style: 'margin:0' }, 'Quien editó una semana no puede aprobarla (regla de cuatro ojos).'))),
+      h('header', null, h('div', null, h('h1', null, 'Revisión y aprobación'), h('p', { class: 'muted', style: 'margin:0' }, 'Quien editó un contenido no puede aprobarlo (regla de cuatro ojos).'))),
       h('section', { class: 'card' }, pendientes.length
         ? h('ul', { class: 'checks' }, pendientes.map(s => h('li', null, icon('audit', 'sm'),
           h('span', { style: 'flex:1' }, h('strong', null, s.titulo), ' · semana del ', fechaCorta(s.week_start), ' · editada por ', s.editor || '—'),
           h('a', { class: 'btn', style: 'min-height:38px', href: '#semana/' + encodeURIComponent(s.id) }, 'Revisar'))))
-        : h('p', { class: 'muted', style: 'margin:0' }, 'No hay semanas pendientes de revisión.')));
+        : h('p', { class: 'muted', style: 'margin:0' }, 'No hay semanas pendientes de revisión.')),
+      h('section', { class: 'card', style: 'margin-top:1rem' }, h('h2', null, 'Alertas y consejos'), otros.length
+        ? h('ul', { class: 'checks' }, otros.map(x => h('li', null, icon(x.tipo === 'alerta' ? 'alert' : 'star', 'sm'),
+          h('span', { style: 'flex:1' }, h('strong', null, x.titulo), ' · ' + x.detalle + ' · editado por ' + (x.editor || '—')),
+          h('a', { class: 'btn', style: 'min-height:38px', href: '#' + x.tipo + '/' + encodeURIComponent(x.id) }, 'Revisar'))))
+        : h('p', { class: 'muted', style: 'margin:0' }, 'No hay alertas ni consejos pendientes.')));
   });
 
   // ---------- Editor ----------

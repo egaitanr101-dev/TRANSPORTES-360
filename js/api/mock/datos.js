@@ -4,13 +4,13 @@
  * modo SUPABASE NUNCA llega al navegador. */
 (function (T) {
   'use strict';
-  const FUENTE_DEMO = 'Fuente: en el modo demostración no se muestran fuentes reales. En la app aparecerá la entidad y el enlace validado por un administrador.';
+  const FUENTE_DEMO = 'en el modo demostración no se muestran fuentes reales. En la app aparecerá la entidad y el enlace validado por un administrador.';
 
   T.mockDatos = {
     usuario: { id: 'u-demo-0417', nombre: 'María Fernández', iniciales: 'MF', codigo: 'TR-0417', area: 'Distribución GAM', rol: 'COLABORADOR', privacidadAceptada: true },
     admin: {
       id: 'u-demo-admin', nombre: 'Ana Solís', rol: 'Administrador',
-      permisos: ['contenido.crear_editar', 'contenido.aprobar', 'ia.generar', 'reportes.ver', 'sorteo.ejecutar', 'sorteo.anular', 'semana.cerrar', 'usuarios.gestionar']
+      permisos: ['contenido.crear_editar', 'contenido.aprobar', 'ia.generar', 'reportes.ver', 'sorteo.ejecutar', 'sorteo.anular', 'alerta.aprobar_critica', 'semana.cerrar', 'usuarios.gestionar']
     },
     // Ejemplo de cápsula para precargar el editor ("Usar ejemplo"): la cápsula interactiva de la demostración
     get ejemploCapsula() {
@@ -131,7 +131,7 @@
     alertas: [
       {
         id: 'al-1', version: 1, prioridad: 'ALTA', categoria: 'Seguridad digital', titulo: 'Mensajes falsos que se hacen pasar por bancos',
-        fecha: '18 nov', vence: '30 nov', confirmada: false,
+        publica: '2026-11-18T08:00:00-06:00', vence: '2026-11-30T18:00:00-06:00', confirmada: false,
         descripcion: 'Circulan mensajes de texto y de WhatsApp que imitan avisos bancarios con enlaces a páginas falsas.',
         riesgo: 'Robo de usuario, contraseña y códigos de verificación, con pérdida de dinero.',
         recomendaciones: ['No toque enlaces de mensajes no solicitados.', 'Entre siempre desde la aplicación oficial o escribiendo usted la dirección.', 'Si ya ingresó datos, llame de inmediato a su banco por el número oficial.'],
@@ -139,7 +139,7 @@
       },
       {
         id: 'al-2', version: 1, prioridad: 'PREVENTIVA', categoria: 'Seguridad y trabajo', titulo: 'Lluvia en carretera: más distancia de frenado',
-        fecha: '11 nov', vence: '15 dic', confirmada: true,
+        publica: '2026-11-11T08:00:00-06:00', vence: '2026-12-15T18:00:00-06:00', confirmada: true,
         descripcion: 'Con pavimento mojado el vehículo necesita más distancia para detenerse, sobre todo con carga.',
         riesgo: 'Colisiones por alcance y pérdida de control.',
         recomendaciones: ['Aumente la distancia con el vehículo de adelante.', 'Reduzca la velocidad antes de las curvas.', 'Encienda las luces aunque sea de día.'],
@@ -148,7 +148,7 @@
     ],
 
     consejo: {
-      titulo: '¿Sabías que...?',
+      id: 'con-1', categoria: 'Seguridad y trabajo', hoy: true, fuente: 'Ejemplo ficticio para la demostración', titulo: '¿Sabías que...?',
       texto: 'Las llantas con la presión correcta ayudan a frenar mejor y a gastar menos combustible. Revíselas en frío y use el valor que indica el fabricante del vehículo.',
       compartir: 'TRANSPORTES 360 · ¿Sabías que...? Las llantas con la presión correcta ayudan a frenar mejor y a gastar menos combustible.'
     },

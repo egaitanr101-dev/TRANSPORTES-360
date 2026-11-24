@@ -13,7 +13,7 @@ window.T360 = window.T360 || {};
 T360.config = {
   nombreApp: 'TRANSPORTES 360',
   lema: 'Aprende · Cuídate · Protégete · Crece',
-  version: '0.1.0 · Fase 3 · iteración 0',
+  version: '0.4.0 · Fase 3 · iteración 4',
   zonaHoraria: 'America/Costa_Rica',
   supabase: {
     // Proyecto TRANSPORTES-360 (conectado el 2026-11-20). Ambos valores son PÚBLICOS por diseño:

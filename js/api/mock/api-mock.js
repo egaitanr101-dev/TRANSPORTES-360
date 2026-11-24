@@ -23,7 +23,8 @@
     confirmadas: new Map(D.alertas.filter(a => a.confirmada).map(a => [a.id, 'antes'])),
     sorteos: {},           // semanaId → { cerrada, vigente, anulados }
     premios: D.premios.map(p => Object.assign({}, p)),
-    semanas: []
+    semanas: [],
+    editorial: { alerta: [], consejo: [] }
   };
 
   // La sesión de la demo se recuerda solo en esta pestaña (sessionStorage), con try/catch por navegación privada.
@@ -98,7 +99,7 @@
       const pendientes = D.alertas.filter(a => !estado.confirmadas.has(a.id));
       return copia({
         usuario: D.usuario, semana: semanaActual(),
-        alertasPendientes: pendientes.map(a => ({ id: a.id, titulo: a.titulo, prioridad: a.prioridad })),
+        alertasPendientes: pendientes,
         consejo: D.consejo, categorias: D.categorias, reconocimientos: D.reconocimientos, premios: estado.premios
       });
     },
@@ -139,7 +140,7 @@
 
     async alertas() {
       exigirSesion(); await espera();
-      return copia(D.alertas.map(a => ({ id: a.id, titulo: a.titulo, prioridad: a.prioridad, categoria: a.categoria, fecha: a.fecha, vence: a.vence, confirmada: estado.confirmadas.has(a.id) })));
+      return copia(D.alertas.map(a => ({ id: a.id, titulo: a.titulo, prioridad: a.prioridad, categoria: a.categoria, version: a.version, publica: a.publica, vence: a.vence, confirmada: estado.confirmadas.has(a.id) })));
     },
 
     async alerta(id) {
@@ -151,11 +152,13 @@
       return r; // en Supabase: registra viewed_at (vista ≠ confirmada)
     },
 
+    async consejos() { exigirSesion(); await espera(); return copia([D.consejo]); },
+
     async confirmarAlerta(id) {
       exigirSesion(); await espera();
       if (!D.alertas.some(a => a.id === id)) throw T.error('NO_ENCONTRADO', 'Alerta no encontrada.');
       if (!estado.confirmadas.has(id)) estado.confirmadas.set(id, new Date().toISOString());
-      return { confirmada: true };
+      return { confirmada: true, confirmada_el: estado.confirmadas.get(id) };
     },
 
     async historial() {
@@ -167,6 +170,24 @@
         alertas: { confirmadas: estado.confirmadas.size, total: D.alertas.length }
       });
     },
+
+    // ---------- Panel: alertas y consejos (simula fn_admin_alerta_* y fn_admin_consejo_*; reglas principales) ----------
+    async alertasAdmin() { await espera(); return copia(estado.editorial.alerta.map(resumenEditorial)); },
+    async alertaAdmin(id) { await espera(); return copia(buscar('alerta', id)); },
+    async guardarAlerta(p) { await espera(); return guardarEditorial('alerta', p); },
+    async enviarAlerta(id) { await espera(); const a = buscar('alerta', id); const falta = !String(a.descripcion || '').trim() || !String(a.riesgo || '').trim() || !(a.recomendaciones || []).some(x => x.trim()) || !String(a.fuente || '').trim() || !a.vence; if (falta) throw T.error('VALIDACION', 'Complete descripción, riesgo, recomendaciones, fuente y vencimiento.'); return pasar(a, 'PENDIENTE_REVISION'); },
+    async devolverAlerta(id, c) { await espera(); return pasar(buscar('alerta', id), 'REQUIERE_CORRECCION', motivo(c)); },
+    async aprobarAlerta(id, editado, fuente, c) { await espera(); if (!fuente) throw T.error('VALIDACION', 'Confirme que verificó la fuente antes de aprobar.'); return aprobarEditorial(buscar('alerta', id), c, true); },
+    async archivarAlerta(id, c) { await espera(); const a = buscar('alerta', id); a.vigente = null; return pasar(a, 'ARCHIVADO', motivo(c)); },
+    async eliminarAlerta(id) { await espera(); estado.editorial.alerta = estado.editorial.alerta.filter(x => x.id !== id); },
+    async consejosAdmin() { await espera(); return copia(estado.editorial.consejo.map(resumenEditorial)); },
+    async consejoAdmin(id) { await espera(); return copia(buscar('consejo', id)); },
+    async guardarConsejo(p) { await espera(); return guardarEditorial('consejo', p); },
+    async enviarConsejo(id) { await espera(); const t = buscar('consejo', id); if (String(t.texto || '').trim().length < 10 || !String(t.fuente || '').trim()) throw T.error('VALIDACION', 'Escriba el consejo y su fuente.'); return pasar(t, 'PENDIENTE_REVISION'); },
+    async devolverConsejo(id, c) { await espera(); return pasar(buscar('consejo', id), 'REQUIERE_CORRECCION', motivo(c)); },
+    async aprobarConsejo(id, editado, c) { await espera(); return aprobarEditorial(buscar('consejo', id), c, false); },
+    async archivarConsejo(id, c) { await espera(); return pasar(buscar('consejo', id), 'ARCHIVADO', motivo(c)); },
+    async eliminarConsejo(id) { await espera(); estado.editorial.consejo = estado.editorial.consejo.filter(x => x.id !== id); },
 
     async aceptarPrivacidad() { exigirSesion(); await espera(); },
 
@@ -406,5 +427,25 @@
     }
   };
 
+  function buscar(tipo, id) { const x = estado.editorial[tipo].find(e => e.id === id); if (!x) throw T.error('NO_ENCONTRADO', 'No encontrado.'); return x; }
+  function motivo(c) { if (String(c || '').trim().length < 5) throw T.error('VALIDACION', 'Escriba el motivo (mínimo 5 caracteres).'); return c.trim(); }
+  function resumenEditorial(x) { return Object.assign({}, x, { categoria: (D.categorias[Number(String(x.category_id).slice(4))] || {}).nombre, vigente: !!x.vigente, seguimiento: x.vigente ? x.vigente.seguimiento : null, publica: x.vigente ? x.vigente.publica : x.publica, vence: x.vence }); }
+  function pasar(x, a, comentario) { x.historial.push({ fecha: new Date().toISOString(), version: x.version, de: x.estado, a, comentario, actor: D.admin.nombre }); x.estado = a; return { estado: a }; }
+  function guardarEditorial(tipo, p) {
+    let x = p.id ? buscar(tipo, p.id) : null;
+    if (!x) { x = { id: tipo + '-' + Date.now(), estado: 'BORRADOR', version: 1, historial: [], aprobada: false, vigente: null }; estado.editorial[tipo].push(x); pasar(x, 'BORRADOR'); }
+    else if (x.estado === 'PUBLICADO') { x.version += 1; pasar(x, 'BORRADOR', 'Nueva versión'); }
+    else if (x.estado === 'PENDIENTE_REVISION') pasar(x, 'BORRADOR', 'Editado durante la revisión');
+    Object.assign(x, copia(p), { id: x.id, editado: new Date().toISOString(), editor: D.admin.nombre });
+    if (x.recomendaciones) x.recomendaciones = x.recomendaciones.map(r => r.trim()).filter(Boolean);
+    return x.id;
+  }
+  // En la demostración la misma persona edita y aprueba: se marca como única aprobadora, igual que en el servidor
+  function aprobarEditorial(x, comentario, alerta) {
+    if (x.estado !== 'PENDIENTE_REVISION') throw T.error('VALIDACION', 'Solo se aprueba lo que está pendiente de revisión.');
+    pasar(x, 'PUBLICADO', comentario); x.aprobada = true; x.publica = x.publica || new Date().toISOString();
+    if (alerta) x.vigente = { version: x.version, prioridad: x.prioridad, titulo: x.titulo, publica: x.publica, vence: x.vence, seguimiento: { audiencia: D.usuarios.filter(u => u.codigo).length, vistas: 0, confirmadas: 0 }, pendientes: D.usuarios.filter(u => u.codigo).map(u => ({ codigo: u.codigo, nombre: u.nombre, area: u.area, vista: false })) };
+    return { estado: x.estado, publica: x.publica, aprobador_unico: true };
+  }
   function estadoSorteo(id) { return estado.sorteos[id] || (estado.sorteos[id] = { cerrada: null, vigente: null, anulados: [] }); }
 })(window.T360);

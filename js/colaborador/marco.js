@@ -59,9 +59,6 @@
           h('button', { class: 'btn ghost block', onclick: cerrar }, 'Cerrar'),
           h('p', { class: 'small muted', style: 'text-align:center;margin:0' }, T.config.nombreApp + ' · ' + T.config.version)));
       document.body.appendChild(fondo);
-    },
-
-    prioridadTexto(p) { return { INFORMATIVA: 'Informativa', PREVENTIVA: 'Preventiva', ALTA: 'Alta', CRITICA: 'Crítica' }[p] || p; },
-    prioridadClase(p) { return { INFORMATIVA: 'info', PREVENTIVA: 'warn', ALTA: 'high', CRITICA: 'crit' }[p] || ''; }
+    }
   };
 })(window.T360);

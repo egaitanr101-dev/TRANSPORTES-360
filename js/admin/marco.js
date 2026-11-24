@@ -6,11 +6,11 @@
 
   const MENU = [
     ['Operación', [['resumen', 'chart', 'Resumen'], ['calendario', 'calendar', 'Calendario editorial']]],
-    ['Contenido', [['capacitacion', 'week', 'Capacitación semanal'], ['revision', 'audit', 'Revisión y aprobación'], ['generador', 'spark', 'Generador IA'], ['alertas', 'alert', 'ALERTAS 360'], ['documentos', 'doc', 'Biblioteca y fuentes']]],
+    ['Contenido', [['capacitacion', 'week', 'Capacitación semanal'], ['revision', 'audit', 'Revisión y aprobación'], ['generador', 'spark', 'Generador IA'], ['alertas', 'alert', 'ALERTAS 360 y consejos'], ['documentos', 'doc', 'Biblioteca y fuentes']]],
     ['Semana', [['sorteo', 'gift', 'Cierre y sorteo']]],
     ['Administración', [['usuarios', 'users', 'Usuarios'], ['config', 'gear', 'Proveedores IA y parámetros'], ['auditoria', 'history', 'Auditoría']]]
   ];
-  const DISPONIBLES = new Set(['resumen', 'capacitacion', 'generador', 'revision', 'sorteo', 'usuarios']);
+  const DISPONIBLES = new Set(['resumen', 'capacitacion', 'generador', 'revision', 'alertas', 'sorteo', 'usuarios']);
 
   T.adm = {
     usuario: null,
@@ -48,7 +48,7 @@
 
     pendiente(ruta) {
       T.adm.marco(ruta, h('h1', null, 'Disponible en una próxima iteración'),
-        h('p', { class: 'muted' }, 'Esta sección forma parte del plan (PLAN_IMPLEMENTACION §8). Por ahora están disponibles: Resumen, Generador IA, Revisión y aprobación, y Cierre y sorteo.'));
+        h('p', { class: 'muted' }, 'Esta sección forma parte del plan (PLAN_IMPLEMENTACION §8). Vea en el menú las secciones que ya están disponibles.'));
     }
   };
 
