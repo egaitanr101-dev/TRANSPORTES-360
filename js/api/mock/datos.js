@@ -10,7 +10,7 @@
     usuario: { id: 'u-demo-0417', nombre: 'María Fernández', iniciales: 'MF', codigo: 'TR-0417', area: 'Distribución GAM', rol: 'COLABORADOR', privacidadAceptada: true },
     admin: {
       id: 'u-demo-admin', nombre: 'Ana Solís', rol: 'Administrador',
-      permisos: ['contenido.crear_editar', 'contenido.aprobar', 'ia.generar', 'reportes.ver', 'sorteo.ejecutar', 'sorteo.anular', 'alerta.aprobar_critica', 'semana.cerrar', 'usuarios.gestionar']
+      permisos: ['contenido.crear_editar', 'contenido.aprobar', 'ia.generar', 'ia.configurar_proveedores', 'reportes.ver', 'sorteo.ejecutar', 'sorteo.anular', 'alerta.aprobar_critica', 'semana.cerrar', 'usuarios.gestionar']
     },
     // Ejemplo de cápsula para precargar el editor ("Usar ejemplo"): la cápsula interactiva de la demostración
     get ejemploCapsula() {
@@ -183,33 +183,6 @@
         { pregunta: 'C2·P1 · Contraseña segura', aciertos: '54 % (58 de 107)' },
         { pregunta: 'C3·P2 · Enlace acortado', aciertos: '63 % (63 de 100)' },
         { pregunta: 'C1·P2 · Ingeniería social', aciertos: '71 % (80 de 112)' }
-      ]
-    },
-
-    borrador: {
-      id: 'bor-48', semana: 48, tema: 'Manejo responsable de deudas', categoria: 'Educación financiera', version: 1, solicitadoPor: 'u-demo-admin',
-      meta: 'Generado por Anthropic · claude-opus-5-5 · 19 nov 14:32 · solicitado por Ana Solís · 41 s · 24 180 tokens de entrada / 17 950 de salida · US$ 0,46 (estimado)',
-      validacion: [
-        { ok: true, texto: '5 cápsulas, de lunes a viernes, con la etapa pedagógica correcta' },
-        { ok: true, texto: '10 preguntas · 3 opciones cada una · 1 sola respuesta correcta' },
-        { ok: true, texto: 'Cada cápsula tiene portada, 2 o más actividades y la evaluación al final' },
-        { ok: true, texto: '9 de 10 fuentes verificadas (el fragmento existe y contiene la cita)' },
-        { ok: false, texto: '1 enlace no aparece en los resultados de búsqueda: marcado como no verificado (cápsula 4)' },
-        { ok: true, texto: 'Sin conflictos entre documentos' }
-      ],
-      checklist: ['No recomienda productos, entidades ni inversiones específicas', 'No promete rendimientos ni resultados', 'Remite a una entidad oficial o a un profesional cuando corresponde', 'Los montos y plazos son ejemplos claramente ficticios', 'Ninguna pregunta tiene dos respuestas defendibles'],
-      capsulas: [
-        { dia: 'Lunes', titulo: '¿Qué es una deuda y cuándo se vuelve un problema?',
-          objetivo: 'Distinguir una deuda manejable de una que pone en riesgo el presupuesto familiar.',
-          intro: 'Endeudarse no es malo por sí mismo: muchas familias compran casa o vehículo a crédito. El problema empieza cuando las cuotas ya no caben en el presupuesto.',
-          preguntas: [
-            { t: 'Rafael paga cada mes cuotas que suman casi la mitad de su salario y usa la tarjeta para comprar comida a fin de mes. ¿Qué indica esta situación?', o: ['Que administra bien su crédito.', 'Una señal de que la deuda está afectando su presupuesto.', 'Que debería pedir otro préstamo para ponerse al día.'], c: 1 },
-            { t: '¿Cuál es el primer paso recomendado para saber si una deuda es manejable?', o: ['Anotar ingresos y gastos del mes, incluidas todas las cuotas.', 'Esperar a que el banco avise.', 'Pedir un aumento del límite de la tarjeta.'], c: 0 }
-          ] },
-        { dia: 'Martes', titulo: 'Cómo leer las condiciones de un crédito o una tarjeta' },
-        { dia: 'Miércoles', titulo: 'Casos: el préstamo rápido y la compra a plazos' },
-        { dia: 'Jueves', titulo: 'Señales de sobreendeudamiento' },
-        { dia: 'Viernes', titulo: 'Plan para salir de deudas, paso a paso' }
       ]
     },
 

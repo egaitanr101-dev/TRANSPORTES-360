@@ -143,6 +143,21 @@
         async archivarConsejo(id, motivo) { return rpc('fn_admin_consejo_archivar', { p_id: id, p_motivo: motivo }); },
         async eliminarConsejo(id) { return rpc('fn_admin_consejo_eliminar', { p_id: id }); },
 
+        // ---------- Panel: generador con IA ----------
+        /** Estado de la base + qué claves existen (la Edge Function responde solo sí o no, nunca su valor). */
+        async iaEstado() {
+          const [e, f] = await Promise.all([rpc('fn_ia_estado'), funcion('ia-generar', { accion: 'estado' }).catch(() => null)]);
+          return Object.assign(e, { claves: f ? f.claves : null });
+        },
+        async iaConfigurar(p) { return rpc('fn_ia_configurar', { p }); },
+        async iaTemaRepetido(tema) { return rpc('fn_ia_tema_repetido', { p_tema: tema }); },
+        async iaSolicitar(p, clave) { return rpc('fn_ia_solicitar', { p, p_clave: clave }); },
+        async iaTrabajos() { return rpc('fn_ia_trabajos'); },
+        async iaTrabajo(id) { return rpc('fn_ia_trabajo', { p_id: id }); },
+        async iaPaso(id) { return funcion('ia-generar', { accion: 'paso', trabajo: id }); },
+        async iaCancelar(id) { return rpc('fn_ia_cancelar', { p_id: id }); },
+        async iaConvertir(id, semana) { return rpc('fn_ia_convertir', { p_id: id, p_semana: semana }); },
+
         // ---------- Panel: cierre y sorteo ----------
         /** Semanas ya publicadas (las únicas que se cierran y sortean), de la más reciente a la más antigua. */
         async semanasSorteo() {
@@ -192,7 +207,7 @@
         async guardarUsuario(id, cambios) { return rpc('fn_admin_usuario_guardar', { p_usuario: id, p: cambios }); }
       };
 
-      const PENDIENTES = ['resumen', 'generarBorrador', 'borrador'];
+      const PENDIENTES = ['resumen'];
       for (const m of PENDIENTES) api[m] = () => Promise.reject(T.error('NO_IMPLEMENTADO', 'Pendiente de su iteración: ' + m));
       return api;
     }

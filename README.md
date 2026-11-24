@@ -4,7 +4,7 @@
 
 | | |
 |---|---|
-| Estado | Fase 3: iteraciones 1 (identidad, activación, importación masiva), 2 (capacitación semanal), 3 (cierre y sorteo) y 4 (alertas y consejos) aplicadas en Supabase ([docs/ITERACION_1.md](docs/ITERACION_1.md), [docs/ITERACION_2.md](docs/ITERACION_2.md), [docs/ITERACION_3.md](docs/ITERACION_3.md), [docs/ITERACION_4.md](docs/ITERACION_4.md)). Siguen: IA, biblioteca, campañas, reportes |
+| Estado | Fase 3: iteraciones 1 (identidad, activación, importación masiva), 2 (capacitación semanal), 3 (cierre y sorteo), 4 (alertas y consejos) y 5 (generador con IA, apagado y sin clave) aplicadas en Supabase ([docs/ITERACION_1.md](docs/ITERACION_1.md), [docs/ITERACION_2.md](docs/ITERACION_2.md), [docs/ITERACION_3.md](docs/ITERACION_3.md), [docs/ITERACION_4.md](docs/ITERACION_4.md), [docs/ITERACION_5.md](docs/ITERACION_5.md)). Siguen: biblioteca, campañas, reportes |
 | Tecnología | HTML + CSS + JavaScript sin compilación, sin npm. Backend: Supabase (Auth, PostgreSQL con RLS, Storage, Edge Functions) |
 | Proyecto Supabase | `TRANSPORTES-360` (conectado). Modo demostración con datos ficticios: agregar `?demo=1` a la dirección |
 
@@ -26,7 +26,7 @@ El servidor solo escucha en `localhost`, no instala nada y no sirve las carpetas
 powershell -NoProfile -ExecutionPolicy Bypass -File tools\probar-sql-local.ps1 -PgBin "<carpeta bin de PostgreSQL 17>"
 ```
 
-Aplica `sql/01`–`07` y las migraciones sobre una simulación de Supabase y ejecuta todas las pruebas (`sql/94`–`99`).
+Aplica `sql/01`–`08` y las migraciones sobre una simulación de Supabase y ejecuta todas las pruebas (`sql/93`–`99`).
 
 ## Estructura
 
@@ -40,8 +40,8 @@ js/colaborador/ · js/admin/  Pantallas
 js/vendor/                   supabase-js 2.45.4 (versión fija, local)
 assets/img/                  Ilustraciones propias (SVG)
 docs/                        Auditoría, plan, mapa funcional, modelo de datos, riesgos, diseño, iteraciones
-sql/                         Migraciones numeradas, pruebas (94–99), reversión y arranque; local/ solo para pruebas
-supabase/functions/          Edge Functions (activar-cuenta, admin-usuarios)
+sql/                         Migraciones numeradas, pruebas (93–99), reversión y arranque; local/ solo para pruebas
+supabase/functions/          Edge Functions (activar-cuenta, admin-usuarios, ia-generar)
 tools/                       Servidor local y pruebas SQL locales
 prototipo/                   Referencia de diseño de la Fase 2
 ```

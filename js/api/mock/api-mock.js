@@ -24,7 +24,8 @@
     sorteos: {},           // semanaId → { cerrada, vigente, anulados }
     premios: D.premios.map(p => Object.assign({}, p)),
     semanas: [],
-    editorial: { alerta: [], consejo: [] }
+    editorial: { alerta: [], consejo: [] },
+    ia: { encendida: false, mes_usd: 10, dia_trabajos: 10, trabajos: [] }
   };
 
   // La sesión de la demo se recuerda solo en esta pestaña (sessionStorage), con try/catch por navegación privada.
@@ -345,14 +346,46 @@
       return { id, activo: u.activo };
     },
     async resumen() { await espera(); return copia(D.resumen); },
-    async borrador() { await espera(); return copia(D.borrador); },
 
-    async generarBorrador(form, alAvanzar) {
-      if (!form || !String(form.tema || '').trim()) throw T.error('VALIDACION', 'Escriba el tema principal.');
-      const pasos = ['EN_COLA · solicitud registrada (clave de idempotencia asignada)', 'EN_GENERACION · recuperando 14 fragmentos de 2 documentos', 'EN_GENERACION · investigando en 12 dominios confiables', 'EN_GENERACION · redactando 5 cápsulas con sus actividades', 'VALIDANDO · estructura, claves de respuesta y fuentes', 'GENERADO · borrador listo para revisión'];
-      for (const p of pasos) { if (alAvanzar) alAvanzar(p); await espera(600); }
-      return { borrador_id: D.borrador.id };
+    // ---------- Panel: generador con IA (simulado: nunca llama a un proveedor) ----------
+    async iaEstado() {
+      await espera();
+      const i = estado.ia;
+      return copia({ encendida: i.encendida, mes_usd: i.mes_usd, dia_trabajos: i.dia_trabajos, gastado_usd: 0, trabajos_hoy: i.trabajos.length, claves: { anthropic: false }, modelos: [
+        { proveedor: 'anthropic', proveedor_nombre: 'Anthropic (Claude)', modelo: 'claude-opus-5-5', nombre: 'Claude Opus 5.5', defecto: true, habilitado: true, entrada: 4, salida: 20, precio_del: '2026-11-24', maximo: { weekly_training: 2.048, alert: 0.208, tip: 0.128 } },
+        { proveedor: 'simulado', proveedor_nombre: 'Simulación (sin costo)', modelo: 'simulado', nombre: 'Simulación · ejemplo fijo', defecto: false, habilitado: true, entrada: 0, salida: 0, precio_del: '2026-11-24', maximo: { weekly_training: 0, alert: 0, tip: 0 } }] });
     },
+    async iaConfigurar(p) { await espera(); for (const k of ['encendida', 'mes_usd', 'dia_trabajos']) if (k in p) estado.ia[k] = p[k]; },
+    async iaTemaRepetido(tema) { await espera(); return /fatiga|estafa/i.test(tema) ? [{ semana: 46, titulo: 'Fatiga y somnolencia al volante', fecha: '2026-11-09' }] : []; },
+    async iaSolicitar(p, clave) {
+      await espera();
+      const ya = estado.ia.trabajos.find(j => j.clave === clave);
+      if (ya) return { id: ya.id, ya_existia: true };
+      if (String(p.tema || '').trim().length < 5) throw T.error('VALIDACION', 'Escriba el tema (de 5 a 140 caracteres).');
+      if (/[^\s@]+@[^\s@]+\.[^\s@]+|[0-9]([ .-]?[0-9]){7,}/.test([p.tema, p.objetivo, p.publico, p.instrucciones].join(' '))) throw T.error('VALIDACION', 'No incluya correos, teléfonos ni números de identificación: el texto se envía al proveedor de IA.');
+      const pasos = ({ weekly_training: ['plan', 'dia1', 'dia2', 'dia3', 'dia4', 'dia5'], alert: ['alerta'], tip: ['consejo'] })[p.tipo];
+      const j = { id: 'ia-' + Date.now(), clave, tipo: p.tipo, tema: p.tema.trim(), estado: 'EN_COLA', proveedor: p.proveedor, modelo: p.modelo, solicitado_por: D.admin.nombre, mio: true, creado: new Date().toISOString(),
+        contenido_id: null, total: pasos.length, listos: 0, costo_usd: 0, informe: null, categoria: (D.categorias[Number(String(p.category_id).slice(4))] || {}).nombre, pasos: pasos.map(x => ({ paso: x, estado: 'PENDIENTE', costo_usd: 0 })) };
+      estado.ia.trabajos.unshift(j);
+      return { id: j.id, ya_existia: false };
+    },
+    async iaTrabajos() { await espera(); return copia(estado.ia.trabajos); },
+    async iaTrabajo(id) { await espera(); return copia(trabajoIA(id)); },
+    async iaPaso(id) {
+      await espera(350);
+      const j = trabajoIA(id), p = j.pasos.find(x => x.estado !== 'OK');
+      if (j.proveedor !== 'simulado') { p.estado = 'FALLIDO'; p.error = 'La demostración no llama a proveedores de IA.'; j.estado = 'FALLIDO'; return { terminado: true, estado: j.estado, ok: false, errores: [p.error] }; }
+      const e = D.ejemploCapsula, t = '[SIMULACIÓN] ' + j.tema;
+      p.resultado = p.paso === 'plan' ? { titulo: t, objetivo: 'Objetivo de ejemplo.' }
+        : p.paso === 'alerta' ? { titulo: t, descripcion: 'Descripción de ejemplo.', riesgo: 'Riesgo de ejemplo.', recomendaciones: ['Recomendación de ejemplo.'] }
+        : p.paso === 'consejo' ? { titulo: t, texto: 'Texto de ejemplo.', compartir: '' }
+        : { titulo: t, objetivo: e.objetivo, minutos: e.minutos, bloques: e.bloques, preguntas: e.preguntas };
+      p.estado = 'OK'; j.listos += 1; j.estado = j.listos === j.total ? 'GENERADO' : 'EN_GENERACION';
+      if (j.estado === 'GENERADO') j.informe = { advertencias: ['La IA no consultó documentos ni fuentes externas: el revisor debe verificar el contenido y agregar la fuente.'] };
+      return { terminado: j.estado === 'GENERADO', estado: j.estado, ok: true, errores: [], paso: p.paso };
+    },
+    async iaCancelar(id) { await espera(); trabajoIA(id).estado = 'CANCELADO'; },
+    async iaConvertir() { await espera(); throw T.error('VALIDACION', 'Una simulación no se convierte en contenido: sirve solo para probar el proceso.'); },
 
     // ---------- Panel: cierre y sorteo (simula fn_admin_sorteo, fn_cerrar_semana, fn_ejecutar_sorteo, fn_anular_sorteo) ----------
     async semanasSorteo() {
@@ -447,5 +480,6 @@
     if (alerta) x.vigente = { version: x.version, prioridad: x.prioridad, titulo: x.titulo, publica: x.publica, vence: x.vence, seguimiento: { audiencia: D.usuarios.filter(u => u.codigo).length, vistas: 0, confirmadas: 0 }, pendientes: D.usuarios.filter(u => u.codigo).map(u => ({ codigo: u.codigo, nombre: u.nombre, area: u.area, vista: false })) };
     return { estado: x.estado, publica: x.publica, aprobador_unico: true };
   }
+  function trabajoIA(id) { const j = estado.ia.trabajos.find(x => x.id === id); if (!j) throw T.error('NO_ENCONTRADO', 'Solicitud no encontrada.'); return j; }
   function estadoSorteo(id) { return estado.sorteos[id] || (estado.sorteos[id] = { cerrada: null, vigente: null, anulados: [] }); }
 })(window.T360);
