@@ -53,4 +53,25 @@
   };
 
   for (const [, items] of MENU) for (const [ruta] of items) if (!DISPONIBLES.has(ruta)) T.enrutador.registrar(ruta, () => T.adm.pendiente(ruta));
+
+  /* Accesibilidad: en cada .field, la etiqueta se asocia a su único campo (for/id); si agrupa varios campos,
+     el grupo se nombra con la etiqueta (role=group + aria-labelledby). Así el lector de pantalla dice qué es cada campo. */
+  let nAsoc = 0, pendienteAsoc = false;
+  function asociar(raiz) {
+    raiz.querySelectorAll('.field').forEach(f => {
+      const l = f.querySelector(':scope > label');
+      if (!l || l.htmlFor) return;
+      const cs = f.querySelectorAll('input, select, textarea');
+      if (cs.length === 1) { cs[0].id = cs[0].id || 'campo-' + (++nAsoc); l.htmlFor = cs[0].id; }
+      else if (cs.length > 1 && !f.hasAttribute('aria-labelledby')) { l.id = l.id || 'grupo-' + (++nAsoc); f.setAttribute('role', 'group'); f.setAttribute('aria-labelledby', l.id); }
+    });
+  }
+  const raizAdmin = document.getElementById('admin');
+  if (raizAdmin && window.MutationObserver) {
+    new MutationObserver(() => {
+      if (pendienteAsoc) return;
+      pendienteAsoc = true;
+      queueMicrotask(() => { pendienteAsoc = false; asociar(raizAdmin); });
+    }).observe(raizAdmin, { childList: true, subtree: true });
+  }
 })(window.T360);

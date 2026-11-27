@@ -11,14 +11,14 @@
   --border: #dde3ec;
   --text: #0f1b2e;
   --text-2: #3d4a60;
-  --muted: #66728a;
+  --muted: #5b677f;   /* 5,2:1 sobre el fondo (antes 4,4:1) */
   --navy: #0b1d3a;
   --navy-2: #16305a;
   --gold: #f0b020;
   --gold-hover: #dc9f12;
   --gold-ink: #8a5c0a;
   --on-gold: #0b1d3a;
-  --good: #0f8a2e;
+  --good: #0b6e24;    /* 5,7:1 sobre --good-soft (antes 3,9:1) */
   --good-soft: #e5f5e9;
   --warn: #9a6200;
   --warn-soft: #fff4d9;

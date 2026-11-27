@@ -2,9 +2,9 @@
  * Guarda SOLO los archivos de la aplicación (pantallas, estilos, código, imágenes propias) para que abra rápido
  * y se pueda instalar. NUNCA guarda respuestas de Supabase: ni contenido, ni puntajes, ni datos personales.
  * Las respuestas a las evaluaciones exigen conexión. El panel (admin.html) no se guarda.
- * Al cambiar algún archivo de la lista, suba VERSION para que todos reciban la versión nueva. */
+ * Con conexión siempre se sirve la versión vigente (primero la red). Suba VERSION si cambia la LISTA de archivos. */
 'use strict';
-const VERSION = 't360-app-0.8.0';
+const VERSION = 't360-app-0.8.1';
 const ARCHIVOS = [
   './', 'index.html', 'manifest.webmanifest',
   'css/tokens.css', 'css/base.css', 'css/colaborador.css',
@@ -38,10 +38,9 @@ self.addEventListener('fetch', (e) => {
     return;
   }
   if (!ARCHIVOS.some(a => url.pathname.endsWith('/' + a.replace('./', '')))) return;
-  // Archivos de la app: la copia guardada al instante y, en segundo plano, se actualiza desde la red.
-  e.respondWith(caches.open(VERSION).then(async (c) => {
-    const guardada = await c.match(req);
-    const red = fetch(req).then(r => { if (r.ok) c.put(req, r.clone()); return r; }).catch(() => guardada);
-    return guardada || red;
-  }));
+  // Archivos de la app: primero la red (con conexión siempre la versión vigente, incluso recién publicada);
+  // la copia guardada solo se usa sin conexión. Se actualiza la copia con cada respuesta correcta.
+  e.respondWith(caches.open(VERSION).then(c => fetch(req)
+    .then(r => { if (r.ok) c.put(req, r.clone()); return r; })
+    .catch(() => c.match(req, { ignoreSearch: true }))));
 });
