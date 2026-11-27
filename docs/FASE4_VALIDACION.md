@@ -3,7 +3,7 @@
 | Campo | Valor |
 |---|---|
 | Fecha | 2026-11-27 |
-| Resultado | Lo verificable sin su sesión: **aprobado**, con 6 correcciones aplicadas (§2). Lo que requiere su sesión real: guía en §4 |
+| Resultado | Lo verificable sin su sesión: **aprobado**, con 7 correcciones aplicadas (§2). Lo que requiere su sesión real: guía en §4 |
 
 ## 1. Qué se verificó
 
