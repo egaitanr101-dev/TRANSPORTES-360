@@ -28,7 +28,7 @@
 
   function iniciar() {
     T.enrutador
-      .defecto(T.config.modo === 'SUPABASE' ? 'usuarios' : 'resumen')
+      .defecto('resumen')
       .alError((e, ruta) => {
         if (e && e.codigo === 'NO_IMPLEMENTADO') { T.adm.pendiente(ruta); return true; }
         if (e && e.codigo === 'NO_AUTENTICADO') { ingreso('Su sesión terminó. Ingrese de nuevo.'); return true; }

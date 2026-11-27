@@ -347,7 +347,22 @@
       if ('is_active' in cambios) u.activo = !!cambios.is_active;
       return { id, activo: u.activo };
     },
-    async resumen() { await espera(); return copia(D.resumen); },
+    // ---------- Panel: reportes (cifras ficticias de demostración) ----------
+    async resumen() {
+      await espera();
+      return copia({ equipo: false, semana: { id: 'sem-47', titulo: D.semana.tema, numero: 47, dia: 4, lunes: '2026-11-16', base: 142, ingresaron: 118, participaron: 112, completaron: 87, promedio: 8.4, promedio_oculto: false },
+        alerta: { titulo: 'Mensajes falsos que se hacen pasar por bancos', version: 1, vence: '2026-11-30T18:00:00-06:00', audiencia: 142, vistas: 101, confirmadas: 88 },
+        ia: { gastado_usd: estado.ia.trabajos.length ? 0 : 0, tope_usd: estado.ia.mes_usd, encendida: estado.ia.encendida },
+        pendientes: { revision: estado.semanas.filter(s => s.estado === 'PENDIENTE_REVISION').length, sin_capacitacion: ['2026-11-30'], sorteos: [{ id: 'sem-46', titulo: 'Fatiga y somnolencia al volante', lunes: '2026-11-09' }], alertas_por_vencer: [], fuentes: 0 },
+        errores: [{ pregunta: 'C2·P1 · Contraseña segura', respuestas: 107, correctas: 58, aciertos: 54 }, { pregunta: 'C3·P2 · Enlace acortado', respuestas: 100, correctas: 63, aciertos: 63 }] });
+    },
+    async reporteSemanas() { await espera(); return copia([{ id: 'sem-47', numero: 47, lunes: '2026-11-16', titulo: D.semana.tema, categoria: 'Seguridad digital', en_curso: true, cerrada: false, base: 142, ingresaron: 118, participaron: 112, completaron: 87, promedio: 8.4 },
+      { id: 'sem-46', numero: 46, lunes: '2026-11-09', titulo: 'Fatiga y somnolencia al volante', categoria: 'Seguridad y trabajo', en_curso: false, cerrada: false, base: 142, ingresaron: 130, participaron: 121, completaron: 97, promedio: 8.9 }]); },
+    async reporteAreas() { await espera(); return copia({ areas: D.areas.map((a, i) => ({ area: a.nombre, area_id: a.id, base: 50 - i * 8, ingresaron: 40 - i * 6, participaron: 38 - i * 6, completaron: 30 - i * 5, promedio: 8.5 - i * 0.3 })), sin_area: 3 }); },
+    async reportePreguntas() { await espera(); return copia([{ dia: 2, capsula: 'Contraseñas', pregunta: 'C2·P1 · Contraseña segura', respuestas: 107, correctas: 58, aciertos: 54, error_comun: 'La fecha de nacimiento' }]); },
+    async reporteAlertas() { await espera(); return copia(D.alertas.map(a => ({ id: a.id, titulo: a.titulo, prioridad: a.prioridad, version: 1, publica: a.publica, vence: a.vence, vigente: true, audiencia: 142, vistas: 101, confirmadas: 88 }))); },
+    async reporteIA() { await espera(); return copia([{ mes: '2026-11', solicitudes: estado.ia.trabajos.length, simuladas: estado.ia.trabajos.filter(j => j.proveedor === 'simulado').length, generadas: estado.ia.trabajos.filter(j => j.estado === 'GENERADO').length, convertidas: 0, aprobadas: 0, costo_usd: 0, costo_estimado: false }]); },
+    async miEquipo() { await espera(); return copia({ semana: { titulo: D.semana.tema, numero: 47, dia: 4, cierra: '2026-11-22' }, personas: D.usuarios.filter(u => u.rol === 'COLABORADOR').map((u, i) => ({ nombre: u.nombre, codigo: u.codigo, area: u.area, activo: u.activo, activada: u.activacion === 'ACTIVADA', capsulas: [4, 2, 0, 3][i % 4], alertas_pendientes: i % 2 })), semanas: [] }); },
 
     // ---------- Panel: campañas y calendario (en memoria) ----------
     async campanas() { await espera(); return copia(estado.campanas.map(c => Object.assign({}, c, { estado: c.archivada ? 'ARCHIVADA' : hoyISO() < c.desde ? 'PLANIFICADA' : hoyISO() > c.hasta ? 'TERMINADA' : 'EN_CURSO', elementos: c.items.length, categoria: nombreCat(c.category_id) }))); },

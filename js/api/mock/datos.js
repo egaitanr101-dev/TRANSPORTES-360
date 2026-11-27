@@ -170,22 +170,6 @@
       { semana: 44, tema: 'Hidratación en jornadas largas', estado: 'Cerrada', capsulas: 4, puntos: 7, participo: false }
     ],
 
-    // ---------- Panel ----------
-    resumen: {
-      titulo: 'Resumen · Semana 47', subtitulo: 'Prevención de estafas digitales · 17 al 23 de noviembre · día 4 de 5',
-      kpis: [
-        { valor: '79 %', etiqueta: 'Participación semanal', den: '112 de 142 colaboradores activos con ≥ 1 cápsula' },
-        { valor: '61 %', etiqueta: 'Al día (4 de 4 cápsulas)', den: '87 de 142' },
-        { valor: '62 %', etiqueta: 'Confirmación de la alerta activa', den: '88 de 142 · 54 pendientes' },
-        { valor: 'US$ 2,40', etiqueta: 'Costo IA del mes (estimado)', den: '6 generaciones · tope US$ 20' }
-      ],
-      errores: [
-        { pregunta: 'C2·P1 · Contraseña segura', aciertos: '54 % (58 de 107)' },
-        { pregunta: 'C3·P2 · Enlace acortado', aciertos: '63 % (63 de 100)' },
-        { pregunta: 'C1·P2 · Ingeniería social', aciertos: '71 % (80 de 112)' }
-      ]
-    },
-
     // Cierre y sorteo (misma forma que fn_admin_sorteo). La semana 46 ya terminó y está lista para cerrar; la 47 está en curso.
     premios: [{ id: 'rec-45', semana: 45, tema: 'Presupuesto familiar', publico: false }],
     sorteo: {

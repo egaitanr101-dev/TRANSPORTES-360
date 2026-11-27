@@ -8,6 +8,19 @@
   if (banner) document.body.insertBefore(banner, app);
   app.appendChild(T.ui.cargando());
 
+  // PWA: el service worker guarda solo los archivos de la app (nunca datos). Requiere https o localhost.
+  if ('serviceWorker' in navigator && (location.protocol === 'https:' || location.hostname === 'localhost')) {
+    window.addEventListener('load', () => navigator.serviceWorker.register('sw.js').catch(() => { /* sin instalación: la app funciona igual */ }));
+  }
+  // Sin conexión: se avisa en lugar de mostrar errores; las respuestas solo se envían con conexión.
+  window.addEventListener('offline', () => T.ui.aviso('Sin conexión. Lo que responda no se enviará hasta que vuelva la señal.', 'error'));
+  window.addEventListener('online', () => { T.ui.aviso('Conexión recuperada.'); T.enrutador.recargar(); });
+  if (!navigator.onLine) {
+    T.poner(app, T.h('main', { class: 'main' }, T.h('h1', null, 'Sin conexión'), T.h('p', { class: 'muted' }, 'TRANSPORTES 360 necesita señal para mostrar su capacitación. Se cargará sola cuando vuelva la conexión.')));
+    window.addEventListener('online', () => location.reload(), { once: true });
+    return;
+  }
+
   T.listo.then(() => {
     T.enrutador
       .defecto('inicio')

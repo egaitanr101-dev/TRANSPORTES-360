@@ -143,6 +143,15 @@
         async archivarConsejo(id, motivo) { return rpc('fn_admin_consejo_archivar', { p_id: id, p_motivo: motivo }); },
         async eliminarConsejo(id) { return rpc('fn_admin_consejo_eliminar', { p_id: id }); },
 
+        // ---------- Panel: reportes ----------
+        async resumen() { return rpc('fn_resumen'); },
+        async reporteSemanas(n) { return rpc('fn_reporte_semanas', { p_semanas: n || 8 }); },
+        async reporteAreas(id) { return rpc('fn_reporte_areas', { p_semana: id }); },
+        async reportePreguntas(id) { return rpc('fn_reporte_preguntas', { p_semana: id }); },
+        async reporteAlertas() { return rpc('fn_reporte_alertas'); },
+        async reporteIA() { return rpc('fn_reporte_ia'); },
+        async miEquipo() { return rpc('fn_mi_equipo'); },
+
         // ---------- Panel: campañas y calendario ----------
         async campanas() { return rpc('fn_campanas'); },
         async campana(id) { return rpc('fn_campana', { p_id: id }); },
@@ -251,9 +260,7 @@
         async guardarUsuario(id, cambios) { return rpc('fn_admin_usuario_guardar', { p_usuario: id, p: cambios }); }
       };
 
-      const PENDIENTES = ['resumen'];
-      for (const m of PENDIENTES) api[m] = () => Promise.reject(T.error('NO_IMPLEMENTADO', 'Pendiente de su iteración: ' + m));
-      return api;
+            return api;
     }
   };
 })(window.T360);

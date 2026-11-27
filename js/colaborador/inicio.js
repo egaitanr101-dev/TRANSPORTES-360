@@ -12,6 +12,8 @@
     // La de hoy; si ya la hizo, la más antigua que quedó pendiente (puede ponerse al día hasta el domingo)
     const hoy = s ? (s.capsulas.find(c => c.estado === 'hoy') || s.capsulas.find(c => c.estado === 'pendiente')) : null;
     const pend = d.alertasPendientes;
+    // Recordatorio: cápsulas de días anteriores sin responder (se pueden hacer hasta el domingo)
+    const atrasadas = s ? s.capsulas.filter(c => c.estado === 'pendiente').length : 0;
 
     T.col.pagina('inicio',
       h('p', { class: 'muted small', style: 'margin:0' }, 'Hola, ' + d.usuario.nombre.split(' ')[0]),
@@ -30,6 +32,7 @@
           ? [h('p', { class: 'small', style: 'opacity:.85;position:relative' }, (hoy.estado === 'hoy' ? 'Cápsula de hoy · ' : 'Pendiente · ') + hoy.nombre),
             h('a', { class: 'btn primary', href: '#capsula/' + encodeURIComponent(hoy.id) }, hoy.titulo, icon('chevron', 'sm'))]
           : h('p', { style: 'position:relative;margin:0' }, '✔ Completó la cápsula de hoy. ¡Nos vemos mañana!')),
+      atrasadas ? h('div', { class: 'note', role: 'status' }, icon('clock', 'sm'), ' Tiene ' + (atrasadas === 1 ? '1 cápsula pendiente' : atrasadas + ' cápsulas pendientes') + ' de días anteriores. Puede ponerse al día hasta el domingo a las 11:59 p. m.; para el sorteo se necesitan las 5.') : null,
       pend.length ? h('a', { class: 'alert-strip' + (pend[0].prioridad === 'CRITICA' ? ' crit' : ''), href: '#alerta/' + encodeURIComponent(pend[0].id) },
         icon('alert'), h('span', { style: 'flex:1' }, (pend.length === 1 ? '1 alerta por confirmar: ' : pend.length + ' alertas por confirmar: ') + pend[0].titulo), icon('chevron', 'sm')) : null,
       (d.premios || []).slice(0, 1).map(tarjetaPremio),
