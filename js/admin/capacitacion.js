@@ -290,6 +290,7 @@
           h('div', { class: 'field full' }, h('label', null, 'Tema de la semana'), valor(entrada(s, 'titulo', { maxlength: 140 }), s.titulo)),
           h('div', { class: 'field full' }, h('label', null, 'Objetivo general'), entrada(s, 'objetivo', { area: true, rows: 2, maxlength: 400 })))),
       h('section', { style: 'margin-top:1rem' }, tabs, panel),
+      s.id && T.fuentesDe ? T.fuentesDe('semana', s.id) : null,
       (s.historial || []).length ? h('section', { class: 'card', style: 'margin-top:1rem' }, h('h2', null, 'Historial'),
         h('ul', { class: 'checks' }, s.historial.slice().reverse().map(x => h('li', null, icon('history', 'sm'),
           h('span', null, new Date(x.fecha).toLocaleString('es-CR', { timeZone: T.config.zonaHoraria }), ' · ', (ESTADOS[x.a] || ['', x.a])[1], ' · ', x.actor || '', x.comentario ? ' — «' + x.comentario + '»' : ''))))) : null);

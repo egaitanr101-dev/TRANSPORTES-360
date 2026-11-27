@@ -192,6 +192,7 @@
           h('div', { style: 'overflow-x:auto' }, h('table', { class: 't' }, h('thead', null, h('tr', null, ['Código', 'Nombre', 'Área', 'La abrió'].map(x => h('th', null, x)))),
             h('tbody', null, v.pendientes.map(p => h('tr', null, h('td', null, p.codigo || '—'), h('td', null, p.nombre), h('td', null, p.area || '—'), h('td', null, p.vista ? 'Sí' : 'No'))))))) : null) : null,
       h('section', { class: 'card', style: 'margin-top:1rem' }, h('div', { class: 'form-grid' }, formulario)),
+      s.id && T.fuentesDe ? T.fuentesDe(esAlerta ? 'alerta' : 'consejo', s.id) : null,
       s.historial.length ? h('section', { class: 'card', style: 'margin-top:1rem' }, h('h2', null, 'Historial'), h('ul', { class: 'checks' }, s.historial.slice().reverse().map(x => h('li', null, icon('history', 'sm'),
         h('span', null, T.fechas.hora(x.fecha) + ' · v' + x.version + ' · ' + (ESTADOS[x.a] || ['', x.a])[1] + ' · ' + (x.actor || '') + (x.comentario ? ' — «' + x.comentario + '»' : '')))))) : null);
     pintarAcciones();

@@ -143,6 +143,35 @@
         async archivarConsejo(id, motivo) { return rpc('fn_admin_consejo_archivar', { p_id: id, p_motivo: motivo }); },
         async eliminarConsejo(id) { return rpc('fn_admin_consejo_eliminar', { p_id: id }); },
 
+        // ---------- Panel: biblioteca y fuentes ----------
+        async docs(temporales) { return rpc('fn_docs', { p_temporales: !!temporales }); },
+        async doc(id) { return rpc('fn_doc', { p_id: id }); },
+        async docGuardar(p) { return rpc('fn_doc_guardar', { p }); },
+        /** Reserva la ruta en el servidor, sube el archivo al espacio privado y registra el texto extraído. */
+        async docSubir(docId, archivo, x, etiqueta) {
+          const v = await rpc('fn_doc_version_iniciar', { p_doc: docId, p: { nombre: x.nombre, mime: x.mime, tamano: x.tamano, sha256: x.sha256, etiqueta: etiqueta || '' } });
+          if (v.estado !== 'SUBIENDO') return { estado: v.estado, ya_existia: true, fragmentos: 0 };
+          const { error } = await cliente.storage.from('documentos').upload(v.ruta, archivo, { contentType: x.mime, upsert: false });
+          if (error && !/exists|duplicate/i.test(error.message || '')) throw T.error(/fetch|network/i.test(error.message || '') ? 'RED' : 'VALIDACION', 'No se pudo subir el archivo. Intente de nuevo.');
+          return rpc('fn_doc_version_completar', { p_version: v.id, p: { fragmentos: x.fragmentos, paginas: x.paginas, nota: x.nota } });
+        },
+        async docEstado(id, estado, motivo) { return rpc('fn_doc_estado', { p_id: id, p_estado: estado, p_motivo: motivo }); },
+        async docBuscar(texto) { return rpc('fn_doc_buscar', { p_texto: texto, p_categoria: null }); },
+        /** Enlace firmado de un minuto (la política de Storage exige permiso de gestión de documentos). */
+        async docDescargar(ruta) {
+          const { data, error } = await cliente.storage.from('documentos').createSignedUrl(ruta, 60);
+          if (error || !data) throw T.error('NO_AUTORIZADO', 'No se pudo generar el enlace de descarga.');
+          return data.signedUrl;
+        },
+        async dominios() { return rpc('fn_dominios'); },
+        async dominioGuardar(p) { return rpc('fn_dominio_guardar', { p }); },
+        async fuentes(estado) { return rpc('fn_fuentes', { p_estado: estado || null }); },
+        async fuenteGuardar(p) { return rpc('fn_fuente_guardar', { p }); },
+        async fuenteValidar(id, estado, notas) { return rpc('fn_fuente_validar', { p_id: id, p_estado: estado, p_notas: notas || null }); },
+        async vinculos(tipo, id) { return rpc('fn_vinculos', { p_tipo: tipo, p_id: id }); },
+        async vincular(p) { return rpc('fn_vincular', { p }); },
+        async desvincular(id) { return rpc('fn_desvincular', { p_id: id }); },
+
         // ---------- Panel: generador con IA ----------
         /** Estado de la base + qué claves existen (la Edge Function responde solo sí o no, nunca su valor). */
         async iaEstado() {

@@ -25,7 +25,8 @@
     premios: D.premios.map(p => Object.assign({}, p)),
     semanas: [],
     editorial: { alerta: [], consejo: [] },
-    ia: { encendida: false, mes_usd: 10, dia_trabajos: 10, trabajos: [] }
+    ia: { encendida: false, mes_usd: 10, dia_trabajos: 10, trabajos: [] },
+    biblio: { docs: [], fuentes: [], dominios: [], vinculos: [] }
   };
 
   // La sesión de la demo se recuerda solo en esta pestaña (sessionStorage), con try/catch por navegación privada.
@@ -347,6 +348,74 @@
     },
     async resumen() { await espera(); return copia(D.resumen); },
 
+    // ---------- Panel: biblioteca y fuentes (en memoria; los archivos no se guardan en ninguna parte) ----------
+    async docs(temporales) { await espera(); return copia(estado.biblio.docs.filter(d => !!d.temporal === !!temporales).map(d => { const v = d.versiones.find(x => x.id === d.version_actual) || {}; return Object.assign({}, d, { version: v.etiqueta, procesado: v.estado, fragmentos: v.fragmentos, archivo: v.archivo, categoria: null }); })); },
+    async doc(id) { await espera(); return copia(docMock(id)); },
+    async docGuardar(p) {
+      await espera();
+      if (!['COLABORADORES', 'ADMIN', 'RESTRINGIDO'].includes(p.acceso)) throw T.error('VALIDACION', 'Clasifique el acceso del documento.');
+      if (String(p.titulo || '').trim().length < 3) throw T.error('VALIDACION', 'Escriba el título.');
+      let d = p.id ? docMock(p.id) : null;
+      if (!d) { d = { id: 'doc-' + Date.now(), versiones: [], estado: 'ACTIVO', usos: 0, version_actual: null }; estado.biblio.docs.unshift(d); }
+      Object.assign(d, copia(p), { id: d.id, ia: p.acceso === 'RESTRINGIDO' ? false : !!p.ia, purga: p.temporal ? new Date(Date.now() + 30 * 864e5).toISOString() : null });
+      return d.id;
+    },
+    async docSubir(docId, archivo, x, etiqueta) {
+      await espera(300);
+      const d = docMock(docId), ya = d.versiones.find(v => v.sha256 === x.sha256);
+      if (ya) return { estado: ya.estado, ya_existia: true, fragmentos: ya.fragmentos };
+      const v = { id: 'ver-' + Date.now(), etiqueta: etiqueta || 'v' + (d.versiones.length + 1), archivo: x.nombre, tipo: x.ext, tamano: x.tamano, sha256: x.sha256, estado: x.fragmentos.length ? 'LISTO' : 'SIN_TEXTO', paginas: x.paginas, fragmentos: x.fragmentos.length, nota: x.nota, ruta: '(demostración)', subido_por: D.admin.nombre, subido: new Date().toISOString(), texto: x.fragmentos };
+      d.versiones.unshift(v); d.version_actual = v.id;
+      return { estado: v.estado, fragmentos: v.fragmentos, ya_existia: false };
+    },
+    async docEstado(id, est, motivo) { await espera(); if (String(motivo || '').trim().length < 5) throw T.error('VALIDACION', 'Explique el motivo.'); docMock(id).estado = est; },
+    async docBuscar(texto) {
+      await espera();
+      const palabras = String(texto || '').toLowerCase().split(/\s+/).filter(p => p.length > 2);
+      if (!palabras.length) return [];
+      const out = [];
+      for (const d of estado.biblio.docs) {
+        const v = d.versiones.find(x => x.id === d.version_actual);
+        if (!v || d.estado !== 'ACTIVO' || d.temporal) continue;
+        v.texto.forEach((f, i) => { if (palabras.some(p => f.texto.toLowerCase().includes(p))) out.push({ documento: d.id, titulo: d.titulo, version: v.etiqueta, seccion: f.seccion, fragmento: i, extracto: f.texto.slice(0, 240), vencido: false }); });
+      }
+      return out.slice(0, 30);
+    },
+    async docDescargar() { await espera(); throw T.error('VALIDACION', 'En la demostración los archivos no se guardan.'); },
+    async dominios() { await espera(); return copia(estado.biblio.dominios); },
+    async dominioGuardar(p) {
+      await espera();
+      const dom = String(p.dominio || '').toLowerCase().trim().replace(/^(https?:\/\/)?(www\.)?/, '');
+      if (!/^([a-z0-9-]+\.)+[a-z]{2,}$/.test(dom)) throw T.error('VALIDACION', 'Escriba solo el dominio, por ejemplo ministeriodesalud.go.cr.');
+      const ya = estado.biblio.dominios.find(x => x.dominio === dom);
+      const nuevo = { dominio: dom, entidad: p.entidad, confiabilidad: p.confiabilidad, activo: p.activo !== false, validado_por: D.admin.nombre, validado: new Date().toISOString() };
+      if (ya) Object.assign(ya, nuevo); else estado.biblio.dominios.push(nuevo);
+    },
+    async fuentes(est) { await espera(); return copia(estado.biblio.fuentes.filter(f => !est || f.estado === est).map(f => Object.assign({}, f, { dominio_confiable: estado.biblio.dominios.some(x => x.activo && (f.dominio === x.dominio || f.dominio.endsWith('.' + x.dominio))) ? f.dominio : null }))); },
+    async fuenteGuardar(p) {
+      await espera();
+      if (!/^https:\/\/[^\s<>"]+$/.test(String(p.url || '').trim())) throw T.error('VALIDACION', 'La dirección debe empezar con https://');
+      const url = p.url.trim();
+      if (estado.biblio.fuentes.some(f => f.url === url)) throw T.error('VALIDACION', 'Esa fuente ya está registrada.');
+      const f = { id: 'fue-' + Date.now(), entidad: p.entidad, titulo: p.titulo, url, dominio: url.replace(/^https:\/\/(www\.)?/, '').split(/[/:?#]/)[0].toLowerCase(), estado: 'PENDIENTE', registrada_por: D.admin.nombre, mia: true, usos: 0, notas: '' };
+      estado.biblio.fuentes.unshift(f);
+      return f.id;
+    },
+    // En la demostración la misma persona registra y valida: se permite como única validadora, igual que en el servidor
+    async fuenteValidar(id, est, notas) { await espera(); if (est === 'RECHAZADA' && String(notas || '').trim().length < 5) throw T.error('VALIDACION', 'Explique por qué se rechaza.'); Object.assign(estado.biblio.fuentes.find(f => f.id === id), { estado: est, validada_por: D.admin.nombre, notas: notas || '' }); return { estado: est, validador_unico: true }; },
+    async vinculos(tipo, id) { await espera(); return copia(estado.biblio.vinculos.filter(v => v.tipo_contenido === tipo && v.contenido === id)); },
+    async vincular(p) {
+      await espera();
+      const f = p.fuente_id ? estado.biblio.fuentes.find(x => x.id === p.fuente_id) : null, d = p.documento_id ? docMock(p.documento_id) : null;
+      if (f && f.estado !== 'VALIDADA') throw T.error('VALIDACION', 'Solo se vinculan fuentes validadas.');
+      const v = d && d.versiones.find(x => x.id === d.version_actual);
+      const ext = String(p.extracto || '').trim().toLowerCase().replace(/\s+/g, ' ');
+      if (d && ext && !v.texto.some(t => t.texto.toLowerCase().replace(/\s+/g, ' ').includes(ext))) throw T.error('VALIDACION', 'El extracto no aparece en el documento. Copie el texto tal como está.');
+      if (estado.biblio.vinculos.some(x => x.contenido === p.id && x.fuente === (p.fuente_id || p.documento_id))) throw T.error('VALIDACION', 'Esa fuente ya está vinculada.');
+      estado.biblio.vinculos.push({ id: 'vin-' + Date.now(), tipo_contenido: p.tipo, contenido: p.id, fuente: p.fuente_id || p.documento_id, tipo: f ? 'externa' : 'documento', nombre: f ? f.entidad + ' · ' + f.titulo : d.titulo + ' (' + v.etiqueta + ')', url: f ? f.url : null, estado: f ? 'VALIDADA' : 'VIGENTE', seccion: p.seccion || '', extracto: p.extracto || '' });
+    },
+    async desvincular(id) { await espera(); estado.biblio.vinculos = estado.biblio.vinculos.filter(v => v.id !== id); },
+
     // ---------- Panel: generador con IA (simulado: nunca llama a un proveedor) ----------
     async iaEstado() {
       await espera();
@@ -480,6 +549,7 @@
     if (alerta) x.vigente = { version: x.version, prioridad: x.prioridad, titulo: x.titulo, publica: x.publica, vence: x.vence, seguimiento: { audiencia: D.usuarios.filter(u => u.codigo).length, vistas: 0, confirmadas: 0 }, pendientes: D.usuarios.filter(u => u.codigo).map(u => ({ codigo: u.codigo, nombre: u.nombre, area: u.area, vista: false })) };
     return { estado: x.estado, publica: x.publica, aprobador_unico: true };
   }
+  function docMock(id) { const d = estado.biblio.docs.find(x => x.id === id); if (!d) throw T.error('NO_ENCONTRADO', 'Documento no encontrado.'); return d; }
   function trabajoIA(id) { const j = estado.ia.trabajos.find(x => x.id === id); if (!j) throw T.error('NO_ENCONTRADO', 'Solicitud no encontrada.'); return j; }
   function estadoSorteo(id) { return estado.sorteos[id] || (estado.sorteos[id] = { cerrada: null, vigente: null, anulados: [] }); }
 })(window.T360);
