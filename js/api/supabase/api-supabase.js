@@ -88,13 +88,13 @@
         // ---------- Colaborador ----------
         async inicio() {
           const usuario = await perfil();
-          const [semana, cats, rec, alertas, consejos] = await Promise.all([
+          const [semana, cats, rec, alertas, consejos, campanas] = await Promise.all([
             rpc('fn_semana_actual'),
             cliente.from('knowledge_categories').select('name, icon').eq('is_active', true).order('sort_order'),
-            rpc('fn_reconocimientos'), rpc('fn_alertas'), rpc('fn_consejos')
+            rpc('fn_reconocimientos'), rpc('fn_alertas'), rpc('fn_consejos'), rpc('fn_campanas_activas')
           ]);
           if (cats.error) throw traducir(cats.error);
-          return Object.assign({ usuario, semana: semana || null, alertasPendientes: alertas.filter(a => !a.confirmada), consejo: consejos.find(c => c.hoy) || null, categorias: (cats.data || []).map(c => ({ icono: c.icon, nombre: c.name })) },
+          return Object.assign({ usuario, semana: semana || null, alertasPendientes: alertas.filter(a => !a.confirmada), consejo: consejos.find(c => c.hoy) || null, campanas, categorias: (cats.data || []).map(c => ({ icono: c.icon, nombre: c.name })) },
                                reconocimientosDe(rec));
         },
         async reconocimientoPublico(id, publico) { await rpc('fn_reconocimiento_publico', { p_id: id, p_publico: !!publico }); },
@@ -142,6 +142,21 @@
         async aprobarConsejo(id, editado, comentario) { return rpc('fn_admin_consejo_aprobar', { p_id: id, p_editado: editado, p_comentario: comentario }); },
         async archivarConsejo(id, motivo) { return rpc('fn_admin_consejo_archivar', { p_id: id, p_motivo: motivo }); },
         async eliminarConsejo(id) { return rpc('fn_admin_consejo_eliminar', { p_id: id }); },
+
+        // ---------- Panel: campañas y calendario ----------
+        async campanas() { return rpc('fn_campanas'); },
+        async campana(id) { return rpc('fn_campana', { p_id: id }); },
+        async campanaGuardar(p) { return rpc('fn_campana_guardar', { p }); },
+        async campanaVisible(id, visible) { return rpc('fn_campana_visible', { p_id: id, p_visible: !!visible }); },
+        async campanaArchivar(id) { return rpc('fn_campana_archivar', { p_id: id }); },
+        async campanaAgregar(id, tipo, ref) { return rpc('fn_campana_agregar', { p_id: id, p_tipo: tipo, p_ref: ref }); },
+        async campanaQuitar(id) { return rpc('fn_campana_quitar', { p_elemento: id }); },
+        async calendario(desde, semanas) { return rpc('fn_calendario', { p_desde: desde, p_semanas: semanas || 8 }); },
+        async calendarioGuardar(lunes, p) { return rpc('fn_calendario_guardar', { p_lunes: lunes, p }); },
+        async calendarioConfigurar(rotacion, meses) { return rpc('fn_calendario_configurar', { p_rotacion: rotacion, p_meses: meses }); },
+        async calendarioSugerencias(categoria) { return rpc('fn_calendario_sugerencias', { p_categoria: categoria }); },
+        async temas(categoria) { return rpc('fn_temas', { p_categoria: categoria || null }); },
+        async temaGuardar(p) { return rpc('fn_tema_guardar', { p }); },
 
         // ---------- Panel: biblioteca y fuentes ----------
         async docs(temporales) { return rpc('fn_docs', { p_temporales: !!temporales }); },

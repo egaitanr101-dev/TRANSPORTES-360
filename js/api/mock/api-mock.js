@@ -26,7 +26,8 @@
     semanas: [],
     editorial: { alerta: [], consejo: [] },
     ia: { encendida: false, mes_usd: 10, dia_trabajos: 10, trabajos: [] },
-    biblio: { docs: [], fuentes: [], dominios: [], vinculos: [] }
+    biblio: { docs: [], fuentes: [], dominios: [], vinculos: [] },
+    campanas: [], plan: {}, rotacion: [0, 3, 1, 2].map(i => 'cat-' + i), meses: 3, temas: []
   };
 
   // La sesión de la demo se recuerda solo en esta pestaña (sessionStorage), con try/catch por navegación privada.
@@ -102,7 +103,7 @@
       return copia({
         usuario: D.usuario, semana: semanaActual(),
         alertasPendientes: pendientes,
-        consejo: D.consejo, categorias: D.categorias, reconocimientos: D.reconocimientos, premios: estado.premios
+        consejo: D.consejo, campanas: campanasVisibles(), categorias: D.categorias, reconocimientos: D.reconocimientos, premios: estado.premios
       });
     },
 
@@ -348,6 +349,59 @@
     },
     async resumen() { await espera(); return copia(D.resumen); },
 
+    // ---------- Panel: campañas y calendario (en memoria) ----------
+    async campanas() { await espera(); return copia(estado.campanas.map(c => Object.assign({}, c, { estado: c.archivada ? 'ARCHIVADA' : hoyISO() < c.desde ? 'PLANIFICADA' : hoyISO() > c.hasta ? 'TERMINADA' : 'EN_CURSO', elementos: c.items.length, categoria: nombreCat(c.category_id) }))); },
+    async campana(id) {
+      await espera();
+      const c = campanaMock(id);
+      const usados = new Set(c.items.map(i => i.ref));
+      const cand = estado.semanas.map(s => ({ tipo: 'semana', ref: s.id, titulo: s.titulo, estado: s.estado })).concat(estado.editorial.alerta.map(a => ({ tipo: 'alerta', ref: a.id, titulo: a.titulo, estado: a.estado })), estado.editorial.consejo.map(t => ({ tipo: 'consejo', ref: t.id, titulo: t.titulo, estado: t.estado })));
+      return copia(Object.assign({}, c, { elementos: c.items, candidatos: cand.filter(x => !usados.has(x.ref) && x.estado !== 'ARCHIVADO') }));
+    },
+    async campanaGuardar(p) {
+      await espera();
+      if (!p.desde || !p.hasta || p.hasta < p.desde) throw T.error('VALIDACION', 'Revise las fechas: el fin no puede ser antes del inicio.');
+      if (String(p.nombre || '').trim().length < 3) throw T.error('VALIDACION', 'Escriba el nombre.');
+      let c = p.id ? campanaMock(p.id) : null;
+      if (!c) { c = { id: 'camp-' + Date.now(), items: [], visible: false, archivada: false }; estado.campanas.unshift(c); }
+      const cambia = c.nombre !== p.nombre || c.descripcion !== p.descripcion || c.desde !== p.desde || c.hasta !== p.hasta;
+      Object.assign(c, { nombre: p.nombre.trim(), descripcion: p.descripcion || '', category_id: p.category_id || null, desde: p.desde, hasta: p.hasta, visible: c.visible && !cambia });
+      return c.id;
+    },
+    // En la demostración la misma persona edita y hace visible: se permite como única aprobadora, igual que en el servidor
+    async campanaVisible(id, v) { await espera(); Object.assign(campanaMock(id), { visible: !!v, visible_por: v ? D.admin.nombre : null }); },
+    async campanaArchivar(id) { await espera(); Object.assign(campanaMock(id), { archivada: true, visible: false }); },
+    async campanaAgregar(id, tipo, ref) {
+      await espera();
+      const c = campanaMock(id);
+      if (c.items.some(i => i.ref === ref)) throw T.error('VALIDACION', 'Ese elemento ya está en la campaña.');
+      const o = tipo === 'semana' ? estado.semanas.find(s => s.id === ref) : estado.editorial[tipo].find(x => x.id === ref);
+      c.items.push({ id: 'it-' + Date.now(), tipo, ref, titulo: o.titulo, estado: o.estado });
+    },
+    async campanaQuitar(itemId) { await espera(); for (const c of estado.campanas) c.items = c.items.filter(i => i.id !== itemId); },
+    async calendario(desde, semanas) {
+      await espera();
+      const out = [];
+      for (let i = 0; i < (semanas || 8); i++) {
+        const l = sumarDias(desde, i * 7), plan = estado.plan[l] || null;
+        const idx = Math.floor((new Date(l + 'T12:00:00') - new Date('2026-01-05T12:00:00')) / 6048e5);
+        const rot = estado.rotacion.length ? estado.rotacion[((idx % estado.rotacion.length) + estado.rotacion.length) % estado.rotacion.length] : null;
+        const real = estado.semanas.find(s => s.week_start === l && s.estado !== 'ARCHIVADO');
+        const previo = estado.plan[sumarDias(l, -7)];
+        out.push({ lunes: l, numero: semanaISO(l), plan: plan && Object.assign({ categoria: nombreCat(plan.category_id) }, plan),
+          semana: real ? { id: real.id, titulo: real.titulo, estado: real.estado } : null,
+          campanas: estado.campanas.filter(c => !c.archivada && sumarDias(l, 6) >= c.desde && l <= c.hasta).map(c => ({ id: c.id, nombre: c.nombre })),
+          rotacion: rot ? { category_id: rot, categoria: nombreCat(rot) } : null,
+          avisos: plan && previo && plan.category_id && plan.category_id === previo.category_id ? ['Misma categoría que la semana anterior.'] : [] });
+      }
+      return copia({ rotacion: estado.rotacion, repeticion_meses: estado.meses, semanas: out });
+    },
+    async calendarioGuardar(lunes, p) { await espera(); if (!p.category_id && !p.tema && !p.notas) delete estado.plan[lunes]; else estado.plan[lunes] = { category_id: p.category_id || null, tema: p.tema || '', notas: p.notas || '' }; },
+    async calendarioConfigurar(rot, meses) { await espera(); if (!rot.length || new Set(rot).size !== rot.length) throw T.error('VALIDACION', 'Revise la rotación: cada categoría una vez.'); estado.rotacion = rot.slice(); estado.meses = meses; },
+    async calendarioSugerencias(cat) { await espera(); return copia({ temas: estado.temas.filter(t => t.category_id === cat && t.activo), errores: [] }); },
+    async temas() { await espera(); return copia(estado.temas.map(t => Object.assign({}, t, { categoria: nombreCat(t.category_id) }))); },
+    async temaGuardar(p) { await espera(); if (String(p.titulo || '').trim().length < 3) throw T.error('VALIDACION', 'Escriba el tema (de 3 a 140 caracteres).'); const t = p.id && estado.temas.find(x => x.id === p.id); if (t) Object.assign(t, { activo: p.activo !== false }); else estado.temas.push({ id: 'tema-' + Date.now(), category_id: p.category_id, titulo: p.titulo.trim(), activo: true }); },
+
     // ---------- Panel: biblioteca y fuentes (en memoria; los archivos no se guardan en ninguna parte) ----------
     async docs(temporales) { await espera(); return copia(estado.biblio.docs.filter(d => !!d.temporal === !!temporales).map(d => { const v = d.versiones.find(x => x.id === d.version_actual) || {}; return Object.assign({}, d, { version: v.etiqueta, procesado: v.estado, fragmentos: v.fragmentos, archivo: v.archivo, categoria: null }); })); },
     async doc(id) { await espera(); return copia(docMock(id)); },
@@ -549,6 +603,12 @@
     if (alerta) x.vigente = { version: x.version, prioridad: x.prioridad, titulo: x.titulo, publica: x.publica, vence: x.vence, seguimiento: { audiencia: D.usuarios.filter(u => u.codigo).length, vistas: 0, confirmadas: 0 }, pendientes: D.usuarios.filter(u => u.codigo).map(u => ({ codigo: u.codigo, nombre: u.nombre, area: u.area, vista: false })) };
     return { estado: x.estado, publica: x.publica, aprobador_unico: true };
   }
+  function campanaMock(id) { const c = estado.campanas.find(x => x.id === id); if (!c) throw T.error('NO_ENCONTRADO', 'Campaña no encontrada.'); return c; }
+  function campanasVisibles() { return estado.campanas.filter(c => c.visible && !c.archivada && c.desde <= hoyISO() && hoyISO() <= c.hasta).map(c => ({ id: c.id, nombre: c.nombre, descripcion: c.descripcion, hasta: c.hasta, elementos: c.items.filter(i => i.tipo === 'consejo' ? estado.editorial.consejo.some(x => x.id === i.ref && x.estado === 'PUBLICADO') : i.tipo === 'alerta' ? estado.editorial.alerta.some(x => x.id === i.ref && x.vigente) : estado.semanas.some(s => s.id === i.ref && s.estado === 'PUBLICADO')).map(i => ({ tipo: i.tipo, id: i.ref, titulo: i.titulo })) })).filter(c => c.elementos.length); }
+  function hoyISO() { return new Date().toLocaleDateString('en-CA', { timeZone: T.config.zonaHoraria }); }
+  function sumarDias(iso, n) { const x = new Date(iso + 'T12:00:00'); x.setDate(x.getDate() + n); return x.toLocaleDateString('en-CA'); }
+  function semanaISO(iso) { const t = new Date(iso + 'T12:00:00Z'); t.setUTCDate(t.getUTCDate() + 4 - (t.getUTCDay() || 7)); return Math.ceil(((t - Date.UTC(t.getUTCFullYear(), 0, 1)) / 864e5 + 1) / 7); }
+  function nombreCat(id) { return id ? (D.categorias[Number(String(id).slice(4))] || {}).nombre || null : null; }
   function docMock(id) { const d = estado.biblio.docs.find(x => x.id === id); if (!d) throw T.error('NO_ENCONTRADO', 'Documento no encontrado.'); return d; }
   function trabajoIA(id) { const j = estado.ia.trabajos.find(x => x.id === id); if (!j) throw T.error('NO_ENCONTRADO', 'Solicitud no encontrada.'); return j; }
   function estadoSorteo(id) { return estado.sorteos[id] || (estado.sorteos[id] = { cerrada: null, vigente: null, anulados: [] }); }

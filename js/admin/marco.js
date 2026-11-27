@@ -6,11 +6,11 @@
 
   const MENU = [
     ['Operación', [['resumen', 'chart', 'Resumen'], ['calendario', 'calendar', 'Calendario editorial']]],
-    ['Contenido', [['capacitacion', 'week', 'Capacitación semanal'], ['revision', 'audit', 'Revisión y aprobación'], ['generador', 'spark', 'Generador IA'], ['alertas', 'alert', 'ALERTAS 360 y consejos'], ['documentos', 'doc', 'Biblioteca y fuentes']]],
+    ['Contenido', [['capacitacion', 'week', 'Capacitación semanal'], ['revision', 'audit', 'Revisión y aprobación'], ['generador', 'spark', 'Generador IA'], ['alertas', 'alert', 'ALERTAS 360 y consejos'], ['campanas', 'gift', 'Campañas'], ['documentos', 'doc', 'Biblioteca y fuentes']]],
     ['Semana', [['sorteo', 'gift', 'Cierre y sorteo']]],
     ['Administración', [['usuarios', 'users', 'Usuarios'], ['config', 'gear', 'Proveedores IA y parámetros'], ['auditoria', 'history', 'Auditoría']]]
   ];
-  const DISPONIBLES = new Set(['resumen', 'capacitacion', 'generador', 'revision', 'alertas', 'documentos', 'sorteo', 'usuarios', 'config']);
+  const DISPONIBLES = new Set(['resumen', 'capacitacion', 'generador', 'revision', 'alertas', 'documentos', 'calendario', 'campanas', 'sorteo', 'usuarios', 'config']);
 
   T.adm = {
     usuario: null,

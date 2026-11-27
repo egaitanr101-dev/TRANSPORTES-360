@@ -19,7 +19,7 @@ $scripts = @('sql\local\00_simulacion_supabase.sql', 'sql\01_base.sql', 'sql\02_
 $scripts += Get-ChildItem (Join-Path $raiz 'sql\migraciones') -Filter '*.sql' | Sort-Object Name | ForEach-Object { 'sql\migraciones\' + $_.Name }
 # Módulos de las iteraciones siguientes (05, 06, ...)
 $todos = Get-ChildItem (Join-Path $raiz 'sql') -File | Sort-Object Name
-$scripts += $todos | Where-Object { $_.Name -match '^0[5-9]_.*\.sql$' } | ForEach-Object { 'sql\' + $_.Name }
+$scripts += $todos | Where-Object { $_.Name -match '^(0[5-9]|[1-7][0-9])_.*\.sql$' } | ForEach-Object { 'sql\' + $_.Name }
 $scripts += $todos | Where-Object { $_.Name -match '^9\d_pruebas_.*\.sql$' } | ForEach-Object { 'sql\' + $_.Name }
 foreach ($s in $scripts) {
   Write-Host "== $s"

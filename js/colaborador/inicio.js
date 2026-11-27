@@ -33,6 +33,7 @@
       pend.length ? h('a', { class: 'alert-strip' + (pend[0].prioridad === 'CRITICA' ? ' crit' : ''), href: '#alerta/' + encodeURIComponent(pend[0].id) },
         icon('alert'), h('span', { style: 'flex:1' }, (pend.length === 1 ? '1 alerta por confirmar: ' : pend.length + ' alertas por confirmar: ') + pend[0].titulo), icon('chevron', 'sm')) : null,
       (d.premios || []).slice(0, 1).map(tarjetaPremio),
+      (d.campanas || []).map(tarjetaCampana),
       d.consejo ? [T.consejoVista(d.consejo, 'Consejo del día · 30 s'), h('p', { class: 'small' }, h('a', { href: '#consejos' }, 'Ver todos los consejos'))] : null,
       h('div', { class: 'section-title' }, h('h2', null, 'Aprenda sobre')),
       h('div', { class: 'cats' }, d.categorias.map(c => h('div', { class: 'cat' }, icon(c.icono), c.nombre))),
@@ -42,6 +43,17 @@
           h('div', { class: 'medal' }, icon(r.icono)), h('div', { class: 'small' }, h('strong', null, r.titulo), h('br'), r.detalle)))),
         h('p', { class: 'small muted' }, 'El ganador aparece solo si autorizó que se publique su nombre.')] : null);
   });
+
+  /** Campaña en curso: solo trae lo que esta persona ya puede ver por su cuenta (lo filtra el servidor). */
+  function tarjetaCampana(c) {
+    const ruta = { semana: '#semana', alerta: '#alerta/', consejo: '#consejo/' };
+    return h('section', { class: 'card', style: 'border-left:4px solid var(--gold)' },
+      h('div', { class: 'small muted' }, 'Campaña · hasta el ' + String(c.hasta).split('-').reverse().join('/')),
+      h('h2', { style: 'margin:.2rem 0' }, c.nombre),
+      c.descripcion ? h('p', { class: 'small', style: 'margin:.25rem 0 .5rem' }, c.descripcion) : null,
+      h('ul', { class: 'checklist' }, c.elementos.map(e => h('li', null, icon(e.tipo === 'alerta' ? 'alert' : e.tipo === 'consejo' ? 'star' : 'week', 'sm'),
+        h('a', { href: ruta[e.tipo] + (e.tipo === 'semana' ? '' : encodeURIComponent(e.id)) }, e.titulo)))));
+  }
 
   /** El ganador decide si su nombre se muestra a los compañeros (D-08). Por defecto, no. */
   function tarjetaPremio(p) {

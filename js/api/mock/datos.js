@@ -10,7 +10,7 @@
     usuario: { id: 'u-demo-0417', nombre: 'María Fernández', iniciales: 'MF', codigo: 'TR-0417', area: 'Distribución GAM', rol: 'COLABORADOR', privacidadAceptada: true },
     admin: {
       id: 'u-demo-admin', nombre: 'Ana Solís', rol: 'Administrador',
-      permisos: ['contenido.crear_editar', 'contenido.aprobar', 'ia.generar', 'ia.configurar_proveedores', 'reportes.ver', 'sorteo.ejecutar', 'sorteo.anular', 'alerta.aprobar_critica', 'semana.cerrar', 'usuarios.gestionar', 'documentos.gestionar', 'fuentes.validar']
+      permisos: ['contenido.crear_editar', 'contenido.aprobar', 'ia.generar', 'ia.configurar_proveedores', 'reportes.ver', 'sorteo.ejecutar', 'sorteo.anular', 'alerta.aprobar_critica', 'semana.cerrar', 'usuarios.gestionar', 'documentos.gestionar', 'fuentes.validar', 'campanas.gestionar']
     },
     // Ejemplo de cápsula para precargar el editor ("Usar ejemplo"): la cápsula interactiva de la demostración
     get ejemploCapsula() {
